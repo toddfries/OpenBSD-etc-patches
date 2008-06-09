@@ -98,14 +98,11 @@ ifstart() {
 		chmod o-rwx $file
 		chown root.wheel $file
 	fi
-
 	ifconfig $if > /dev/null 2>&1
-	ret=$?
-	if [ $ret == "0" ]; then
+	if [ "$?" == "0" ]; then
 		# Clean the if of any existing addresses
 		teardown $if
-	fi
-	if [ "$ret" != "0" ]; then
+	else
 		# Try to create interface if it does not exist
 		ifconfig $if create > /dev/null 2>&1
 		if [ "$?" != "0" ]; then
@@ -113,7 +110,7 @@ ifstart() {
 		fi
 	fi
 
-	# Now parse the $file file
+	# Now parse the hostname.* file
 	while :; do
 		if [ "$cmd2" ]; then
 			# We are carrying over from the 'read dt dtaddr'
@@ -262,8 +259,8 @@ bridgestart() {
 			return
 		fi
 	fi
-	br_file=$(nets_file bridgename.$if)
-	# Now parse the $br_file file
+	file=$(nets_file bridgename.$if)
+	# Now parse the $file file
 	# All lines are run as brconfig(8) commands.
 	while read line ; do
 		line=${line%%#*}		# strip comments
@@ -277,7 +274,7 @@ bridgestart() {
 			;;
 		esac
 		eval "$cmd"
-	done < $br_file
+	done < $file
 }
 
 # Re-read /etc/rc.conf
@@ -375,6 +372,10 @@ if ifconfig lo0 inet6 >/dev/null 2>&1; then
 	route -qn add -inet6 2002:0000:: -prefixlen 24 ::1 -reject > /dev/null
 	route -qn add -inet6 2002:ff00:: -prefixlen 24 ::1 -reject > /dev/null
 
+	# Disallow packets without scope identifier.
+	route -qn add -inet6 ff01:: -prefixlen 16 ::1 -reject > /dev/null
+	route -qn add -inet6 ff02:: -prefixlen 16 ::1 -reject > /dev/null
+
 	# Completely disallow packets to IPv4 compatible prefix.
 	# This may conflict with RFC1933 under following circumstances:
 	# (1) An IPv6-only KAME node tries to originate packets to IPv4
@@ -401,6 +402,11 @@ fi
 # Refer to hostname.if(5) and bridgename.if(5)
 ifmstart "" "trunk vlan carp gif gre pfsync pppoe"
 
+# The trunk interfaces need to come up first in this list.
+# The vlan interfaces need to come up after trunk.
+# Configure all the carp interfaces which we know about before default route.
+ifmstart "trunk vlan carp"
+
 if [ "$ip6kernel" = "YES" -a "x$rtsolif" != "x" ]; then
 	fw=`sysctl -n net.inet6.ip6.forwarding`
 	ra=`sysctl -n net.inet6.ip6.accept_rtadv`
@@ -411,17 +417,6 @@ if [ "$ip6kernel" = "YES" -a "x$rtsolif" != "x" ]; then
 		echo "WARNING: inconsistent config - check /etc/sysctl.conf for IPv6 autoconf"
 	fi
 fi
-if [ "$ip6kernel" = "YES" ]; then
-	# this is to make sure DAD is completed before going further.
-	sleep `sysctl -n net.inet6.ip6.dad_count`
-fi
-
-# The trunk interfaces need to come up first in this list.
-# The vlan interfaces need to come up after trunk.
-# The pfsync interfaces need to come up before carp.
-# Configure all the carp interfaces which we know about.
-# They must come up after pfsync but before default route.
-ifmstart "trunk vlan pfsync carp"
 
 gate_file=`nets_file mygate`
 # $gate_file, if it exists, contains the address(es) of the
@@ -446,6 +441,7 @@ done
 # NO			YES			none installed	daemon will run
 # YES/interface		NO			-interface	YES=def. iface
 #	   Any other combination		-reject		config error
+route -qn delete 224.0.0.0/4 > /dev/null 2>&1
 case "$multicast_host:$multicast_router" in
 NO:NO)
 	route -qn add -net 224.0.0.0/4 -interface 127.0.0.1 -reject > /dev/null
@@ -453,7 +449,7 @@ NO:NO)
 NO:YES)
 	;;
 *:NO)
-	set `if [ $multicast_host = YES ]; then
+	maddr=`if [ "$multicast_host" = YES ]; then
 		ed -s '!route -qn show -inet' <<EOF
 /^default/p
 EOF
@@ -461,8 +457,14 @@ EOF
 		ed -s "!ifconfig $multicast_host" <<EOF
 /^	inet /p
 EOF
-	fi`
-	route -qn add -net 224.0.0.0/4 -interface $2 > /dev/null
+	fi 2> /dev/null`
+	if [ "X${maddr}" != "X" ]; then
+		set $maddr
+		route -qn add -net 224.0.0.0/4 -interface $2 > /dev/null
+	else
+		route -qn add -net 224.0.0.0/4 -interface \
+			127.0.0.1 -reject > /dev/null
+	fi
 	;;
 *:*)
 	echo 'config error, multicasting disabled until rc.conf is fixed'
@@ -488,3 +490,7 @@ for bn in $etc/bridgename.* /etc/bridgename.*; do
 	bridgestart $if
 done
 
+if [ "$ip6kernel" = "YES" ]; then
+	# this is to make sure DAD is completed before going further.
+	sleep `sysctl -n net.inet6.ip6.dad_count`
+fi
