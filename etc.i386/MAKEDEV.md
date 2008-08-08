@@ -1,6 +1,6 @@
 define(MACHINE,i386)dnl
 vers(__file__,
-	{-$OpenBSD: MAKEDEV.md,v 1.46 2008/06/14 23:09:06 todd Exp $-},
+	{-$OpenBSD: MAKEDEV.md,v 1.48 2008/06/28 21:46:05 mglocker Exp $-},
 etc.MACHINE)dnl
 dnl
 dnl Copyright (c) 2001-2006 Todd T. Fries <todd@OpenBSD.org>
@@ -52,11 +52,11 @@ _DEV(ptm, 81)
 _DEV(pty, 6)
 _DEV(tty, 5)
 _TITLE(cons)
-_DEV(wscons)
+_DEV(drm, 88)
 _DEV(wsdisp, 12)
+_DEV(wscons)
 _DEV(wskbd, 67)
 _DEV(wsmux, 69)
-_DEV(drm, 88)
 _TITLE(point)
 _DEV(wsmouse, 68)
 _TITLE(prn)
@@ -71,7 +71,6 @@ _DEV(ulpt, 64)
 _DEV(urio, 65)
 _DEV(usb, 61)
 _DEV(uscan, 77)
-_DEV(vi, 44)
 _TITLE(spec)
 _DEV(agp, 87)
 _DEV(apm, 21)
@@ -103,6 +102,7 @@ _DEV(systrace, 78)
 _DEV(tun, 40)
 _DEV(tuner, 49)
 _DEV(uk, 20)
+_DEV(vi, 44)
 _DEV(xfs, 51)
 dnl
 divert(__mddivert)dnl
