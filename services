@@ -1,4 +1,4 @@
-#	$OpenBSD: services,v 1.69 2008/05/07 12:19:20 beck Exp $
+#	$OpenBSD: services,v 1.71 2008/11/13 04:26:59 deraadt Exp $
 #
 # Network services, Internet style
 #

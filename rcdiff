@@ -1,0 +1,109 @@
+--- /etc/rc	Tue Nov  4 12:25:30 2008
++++ rc	Wed Nov 26 22:24:04 2008
+@@ -1,5 +1,5 @@
++#	$OpenBSD: rc,v 1.320 2008/11/27 00:52:06 uwe Exp $
+ 
+-
+ # System startup script run by init on autoboot
+ # or after single-user.
+ # Output and error are redirected to console by init,
+@@ -116,6 +116,34 @@
+ 	fi
+ }
+ 
++fill_baddynamic()
++{
++	local _service="$1"
++	local _sysctl="net.inet.${_service}.baddynamic"
++	local _name _port _srv _junk _ban
++	local _i=0
++	grep "/${_service}" /etc/services | { 
++		IFS=" 	/"
++		while read _name _port _srv _junk; do
++			[ "x${_srv}" = "x${_service}" ] || continue;
++			if [ "x${_ban}" = "x" ]; then
++				_ban="+${_port}"
++			else
++				_ban="${_ban},+${_port}"
++			fi
++			# Flush before argv gets too long
++			if [ $((++_i)) -gt 128 ]; then
++				sysctl ${_sysctl}=${_ban} >/dev/null
++				_ban=""
++				_i=0
++			fi
++		done; 
++		if [ "x${_ban}" != "x" ]; then
++			sysctl ${_sysctl}=${_ban} >/dev/null
++		fi
++	}
++}
++
+ # End subroutines
+ 
+ stty status '^T'
+@@ -263,6 +281,10 @@
+ 	pfctl -e
+ fi
+ 
++# Fill net.inet.(tcp|udp).baddynamic lists from /etc/services
++fill_baddynamic udp
++fill_baddynamic tcp
++
+ sysctl_conf
+ 
+ # set hostname, turn on network
+@@ -407,6 +429,7 @@
+ 	echo -n ' nfsd';		nfsd ${nfsd_flags}
+ 	if [ X"${lockd}" = X"YES" ]; then
+ 		echo -n ' rpc.lockd';	rpc.lockd
++		echo -n ' rpc.statd';	rpc.statd
+ 	fi
+ fi
+ 
+@@ -425,8 +448,8 @@
+ 	echo -n ' timed'; timed $timed_flags
+ fi
+ 
+-if [ X"${nmeaattach_flags}" != X"NO" -a -n "${nmeaattach_flags}" ]; then
+-	echo -n ' nmeaattach';	nmeaattach ${nmeaattach_flags}
++if [ X"${ldattach_flags}" != X"NO" -a -n "${ldattach_flags}" ]; then
++	echo -n ' ldattach'; ldattach ${ldattach_flags}
+ fi
+ 
+ if [ X"${ntpd_flags}" != X"NO" ]; then
+@@ -622,10 +645,7 @@
+ 
+ if [ X"${dhcpd_flags}" != X"NO" -a -f /etc/dhcpd.conf ]; then
+ 	touch /var/db/dhcpd.leases
+-	if [ -f /etc/dhcpd.interfaces ]; then
+-		dhcpd_ifs=`stripcom /etc/dhcpd.interfaces`
+-	fi
+-	echo -n ' dhcpd';	/usr/sbin/dhcpd ${dhcpd_flags} ${dhcpd_ifs}
++	echo -n ' dhcpd';	/usr/sbin/dhcpd ${dhcpd_flags}
+ fi
+ 
+ if [ X"${dhcrelay_flags}" != X"NO" ]; then
+@@ -655,6 +675,13 @@
+ 	echo -n ' hostapd';		/usr/sbin/hostapd ${hostapd_flags};
+ fi
+ 
++if [ X"${bt}" != X"NO" ]; then
++	echo -n ' btd';			/usr/sbin/btd
++	if [ -f ${bt_rules} ]; then
++		btctl -f ${bt_rules}
++	fi
++fi
++
+ if [ X"${rwhod}" = X"YES" ]; then
+ 	echo -n ' rwhod';		rwhod
+ fi
+@@ -702,7 +729,7 @@
+ 		spamd_flags="${spamd_flags} -b"
+ 	fi
+ 	echo -n ' spamd';		eval /usr/libexec/spamd ${spamd_flags}
+-	/usr/libexec/spamd-setup
++	/usr/libexec/spamd-setup -D
+ 	if [ X"${spamd_black}" = X"NO" ]; then
+ 		echo -n ' spamlogd'
+ 		/usr/libexec/spamlogd ${spamlogd_flags}
