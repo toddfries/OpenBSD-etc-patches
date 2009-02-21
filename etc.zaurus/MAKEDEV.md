@@ -1,6 +1,6 @@
 define(MACHINE,zaurus)dnl
 vers(__file__,
-	{-$OpenBSD: MAKEDEV.md,v 1.17 2008/06/28 21:46:05 mglocker Exp $-},
+	{-$OpenBSD: MAKEDEV.md,v 1.19 2009/02/06 21:17:15 grange Exp $-},
 etc.MACHINE)dnl
 dnl
 dnl Copyright (c) 2001-2004 Todd T. Fries <todd@OpenBSD.org>
@@ -94,7 +94,7 @@ ramdisk)
 	_recurse st0 ttyC0 wskbd0 apm bio
 	;;
 
-_std(1, 2, 8, 3, 6)
+_std(1, 2, 8, 6)
 	;;
 dnl
 dnl *** zaurus specific targets
@@ -111,7 +111,7 @@ target(all, tun, 0, 1, 2, 3)dnl
 target(all, xy, 0, 1, 2, 3)dnl
 target(all, rd, 0)dnl
 target(all, cd, 0, 1)dnl
-target(all, sd, 0, 1, 2, 3, 4)dnl
+target(all, sd, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9)dnl
 target(all, vnd, 0, 1, 2, 3)dnl
 target(all, ccd, 0, 1, 2, 3)dnl
 target(all, ttyC, 0, 1)dnl

@@ -1,6 +1,6 @@
 define(MACHINE,socppc)dnl
 vers(__file__,
-	{-$OpenBSD: MAKEDEV.md,v 1.4 2008/06/28 21:46:05 mglocker Exp $-},
+	{-$OpenBSD: MAKEDEV.md,v 1.6 2009/02/06 21:17:15 grange Exp $-},
 etc.MACHINE)dnl
 dnl
 dnl Copyright (c) 2001-2006 Todd T. Fries <todd@OpenBSD.org>
@@ -84,7 +84,7 @@ _DEV(xfs, 51)
 dnl
 divert(__mddivert)dnl
 dnl
-_std(1, 2, 43, 3, 6)
+_std(1, 2, 43, 6)
 	;;
 
 dnl
@@ -101,7 +101,7 @@ target(all, tun, 0, 1, 2, 3)dnl
 target(all, xy, 0, 1, 2, 3)dnl
 target(all, rd, 0)dnl
 target(all, cd, 0, 1)dnl
-target(all, sd, 0, 1, 2, 3, 4)dnl
+target(all, sd, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9)dnl
 target(all, vnd, 0, 1, 2, 3)dnl
 target(all, ccd, 0, 1, 2, 3)dnl
 target(all, gpio, 0, 1, 2)dnl
