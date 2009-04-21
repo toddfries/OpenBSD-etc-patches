@@ -1,18 +1,14 @@
-#	$OpenBSD: Makefile.inc,v 1.4 2006/07/27 02:53:55 deraadt Exp $
+#	$OpenBSD: Makefile.inc,v 1.6 2009/04/21 09:12:27 deraadt Exp $
 
-.ifdef DESTDIR
-snap_md: bsd bootblocks distrib
+kernels: bsd
 	cp ${.CURDIR}/../sys/arch/sgi/compile/GENERIC/bsd \
-	    ${DESTDIR}/snapshot/bsd
+	    ${RELEASEDIR}/bsd
 
 bsd:
 	cd ${.CURDIR}/../sys/arch/sgi/conf && config GENERIC
 	cd ${.CURDIR}/../sys/arch/sgi/compile/GENERIC && \
 	    ${MAKE} clean && ${MAKE} depend && exec ${MAKE}
 
-bootblocks:
-	#none needed
+MDEXT=	bsd bsd.rd cd${OSrev}.iso
 
-.PHONY: bsd bootblocks
-
-.endif	# DESTDIR check
+.PHONY: bsd

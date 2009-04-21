@@ -1,21 +1,19 @@
-#	$OpenBSD: Makefile.inc,v 1.2 2006/11/12 21:45:19 deraadt Exp $
+#	$OpenBSD: Makefile.inc,v 1.5 2009/04/21 09:12:26 deraadt Exp $
 
-.ifdef DESTDIR
-snap_md: bsd bootblocks distrib
+kernels: bsd bootblocks
 	cp ${.CURDIR}/../sys/arch/landisk/compile/GENERIC/bsd \
-	    ${DESTDIR}/snapshot/bsd
+	    ${RELEASEDIR}/bsd
 
 bsd:
 	cd ${.CURDIR}/../sys/arch/landisk/conf && config GENERIC
 	cd ${.CURDIR}/../sys/arch/landisk/compile/GENERIC && \
 	    ${MAKE} clean && ${MAKE} depend && exec ${MAKE}
 
-# probably will be replaced by procedure to build 'miniroot' image
 bootblocks:
-	cp ${DESTDIR}/usr/mdec/mbr ${DESTDIR}/snapshot
-	cp ${DESTDIR}/usr/mdec/xxboot ${DESTDIR}/snapshot
-	cp ${DESTDIR}/usr/mdec/boot ${DESTDIR}/snapshot
+	cp ${DESTDIR}/usr/mdec/mbr ${RELEASEDIR}
+	cp ${DESTDIR}/usr/mdec/xxboot ${RELEASEDIR}
+	cp ${DESTDIR}/usr/mdec/boot ${RELEASEDIR}
+
+MDEXT=	bsd mbr bsd.rd xxboot boot
 
 .PHONY: bsd bootblocks
-
-.endif	# DESTDIR check

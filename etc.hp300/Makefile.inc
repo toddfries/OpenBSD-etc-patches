@@ -1,9 +1,8 @@
-#	$OpenBSD: Makefile.inc,v 1.19 2006/07/27 02:53:55 deraadt Exp $
+#	$OpenBSD: Makefile.inc,v 1.21 2009/04/21 09:12:26 deraadt Exp $
 
-.ifdef DESTDIR
-snap_md: bsd bootblocks distrib
+kernels: bsd bootblocks
 	cp ${.CURDIR}/../sys/arch/hp300/compile/GENERIC/bsd \
-	    ${DESTDIR}/snapshot/bsd
+	    ${RELEASEDIR}/bsd
 
 bsd:
 	cd ${.CURDIR}/../sys/arch/hp300/conf && config GENERIC
@@ -11,9 +10,9 @@ bsd:
 	    ${MAKE} clean && ${MAKE} depend && exec ${MAKE}
 
 bootblocks:
-	cp ${DESTDIR}/usr/mdec/uboot.lif ${DESTDIR}/snapshot/SYS_UBOOT
-	cp ${DESTDIR}/usr/mdec/cdboot.lif ${DESTDIR}/snapshot/SYS_CDBOOT
+	cp ${DESTDIR}/usr/mdec/uboot.lif ${RELEASEDIR}/SYS_UBOOT
+	cp ${DESTDIR}/usr/mdec/cdboot.lif ${RELEASEDIR}/SYS_CDBOOT
+
+MDEXT=	bsd bsd.rd SYS_UBOOT SYS_CDBOOT
 
 .PHONY: bsd bootblocks
-
-.endif	# DESTDIR check
