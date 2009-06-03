@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile.inc,v 1.4 2008/06/16 08:18:39 todd Exp $
+#	$OpenBSD: Makefile.inc,v 1.6 2009/06/03 17:02:17 todd Exp $
 
 M=${.CURDIR:C/^.*\/etc\.([^\/]*)$/\1/}
 
