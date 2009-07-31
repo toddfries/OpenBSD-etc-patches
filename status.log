@@ -1,0 +1,21 @@
+# On branch master
+# Changed but not updated:
+#   (use "git add <file>..." to update what will be committed)
+#   (use "git checkout -- <file>..." to discard changes in working directory)
+#
+#	modified:   MAKEDEV.common
+#	modified:   etc.armish/MAKEDEV
+#	modified:   etc.armish/MAKEDEV.md
+#	modified:   etc.landisk/MAKEDEV
+#	modified:   etc.landisk/MAKEDEV.md
+#	modified:   etc.mvme88k/Makefile.inc
+#	modified:   etc.zaurus/MAKEDEV
+#	modified:   etc.zaurus/MAKEDEV.md
+#
+# Untracked files:
+#   (use "git add <file>..." to include in what will be committed)
+#
+#	Makefile.inc.orig
+#	status.log
+#	up.log
+no changes added to commit (use "git add" and/or "git commit -a")
