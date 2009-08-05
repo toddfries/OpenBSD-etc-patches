@@ -17,11 +17,6 @@ Host key fingerprint is 3f:44:14:35:1b:65:cc:cb:da:17:6d:1d:e1:b4:a6:36
 ? status.log
 ? sync.sh
 ? up.log
-P MAKEDEV.common
-P etc.armish/MAKEDEV
-P etc.armish/MAKEDEV.md
-P etc.landisk/MAKEDEV
-P etc.landisk/MAKEDEV.md
-P etc.mvme88k/Makefile.inc
-P etc.zaurus/MAKEDEV
-P etc.zaurus/MAKEDEV.md
+P rc
+P etc.i386/sysctl.conf
+P etc.zaurus/sysctl.conf
