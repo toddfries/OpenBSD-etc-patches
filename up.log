@@ -1,22 +1,11 @@
-Host key fingerprint is 3f:44:14:35:1b:65:cc:cb:da:17:6d:1d:e1:b4:a6:36
-+--[ RSA 1024]----+
-|          oo++oo.|
-|         .   ==..|
-|          . .. =+|
-|         .    =.+|
-|        S .  E ..|
-|         o  o o .|
-|          o    . |
-|           .     |
-|                 |
-+-----------------+
-
 ? .git
 ? .gitignore
 ? rcdiff
 ? status.log
 ? sync.sh
 ? up.log
+P ksh.kshrc
+P pf.os
 P rc
-P etc.i386/sysctl.conf
-P etc.zaurus/sysctl.conf
+P afs/README
+P etc.amd64/MAKEDEV.md

@@ -3,8 +3,10 @@
 #   (use "git add <file>..." to update what will be committed)
 #   (use "git checkout -- <file>..." to discard changes in working directory)
 #
-#	modified:   etc.i386/sysctl.conf
-#	modified:   etc.zaurus/sysctl.conf
+#	modified:   afs/README
+#	modified:   etc.amd64/MAKEDEV.md
+#	modified:   ksh.kshrc
+#	modified:   pf.os
 #	modified:   rc
 #	modified:   status.log
 #	modified:   up.log
