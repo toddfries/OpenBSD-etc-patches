@@ -1,14 +1,57 @@
 # On branch master
+# Changes to be committed:
+#   (use "git reset HEAD <file>..." to unstage)
+#
+#	deleted:    Makefile.inc.orig
+#
 # Changed but not updated:
 #   (use "git add <file>..." to update what will be committed)
 #   (use "git checkout -- <file>..." to discard changes in working directory)
 #
-#	modified:   afs/README
+#	modified:   MAKEDEV.common
+#	modified:   etc.alpha/MAKEDEV
+#	modified:   etc.alpha/MAKEDEV.md
+#	modified:   etc.amd64/MAKEDEV
 #	modified:   etc.amd64/MAKEDEV.md
-#	modified:   ksh.kshrc
-#	modified:   pf.os
-#	modified:   rc
+#	modified:   etc.armish/MAKEDEV
+#	modified:   etc.armish/MAKEDEV.md
+#	modified:   etc.aviion/MAKEDEV
+#	modified:   etc.aviion/MAKEDEV.md
+#	modified:   etc.hp300/MAKEDEV
+#	modified:   etc.hp300/MAKEDEV.md
+#	modified:   etc.hppa/MAKEDEV
+#	modified:   etc.hppa/MAKEDEV.md
+#	modified:   etc.hppa64/MAKEDEV
+#	modified:   etc.hppa64/MAKEDEV.md
+#	modified:   etc.i386/MAKEDEV
+#	modified:   etc.i386/MAKEDEV.md
+#	modified:   etc.landisk/MAKEDEV
+#	modified:   etc.landisk/MAKEDEV.md
+#	modified:   etc.luna88k/MAKEDEV
+#	modified:   etc.luna88k/MAKEDEV.md
+#	modified:   etc.mac68k/MAKEDEV
+#	modified:   etc.mac68k/MAKEDEV.md
+#	modified:   etc.macppc/MAKEDEV
+#	modified:   etc.macppc/MAKEDEV.md
+#	modified:   etc.mvme68k/MAKEDEV
+#	modified:   etc.mvme68k/MAKEDEV.md
+#	modified:   etc.mvme88k/MAKEDEV
+#	modified:   etc.mvme88k/MAKEDEV.md
+#	modified:   etc.mvmeppc/MAKEDEV.md
+#	modified:   etc.sgi/MAKEDEV
+#	modified:   etc.sgi/MAKEDEV.md
+#	modified:   etc.socppc/MAKEDEV
+#	modified:   etc.socppc/MAKEDEV.md
+#	modified:   etc.sparc/MAKEDEV
+#	modified:   etc.sparc/MAKEDEV.md
+#	modified:   etc.sparc64/MAKEDEV
+#	modified:   etc.sparc64/MAKEDEV.md
+#	modified:   etc.vax/MAKEDEV
+#	modified:   etc.vax/MAKEDEV.md
+#	modified:   etc.zaurus/MAKEDEV
+#	modified:   etc.zaurus/MAKEDEV.md
+#	modified:   mtree/special
+#	modified:   services
 #	modified:   status.log
 #	modified:   up.log
 #
-no changes added to commit (use "git add" and/or "git commit -a")
