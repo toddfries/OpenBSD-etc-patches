@@ -3,3 +3,5 @@ obj
 .cvsignore
 .#*
 sync.sh
+*.orig
+*.log
