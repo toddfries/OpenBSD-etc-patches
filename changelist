@@ -1,4 +1,4 @@
-#	$OpenBSD: changelist,v 1.60 2009/03/16 23:18:45 jacekm Exp $
+#	$OpenBSD: changelist,v 1.62 2009/10/01 19:01:28 matthieu Exp $
 #
 # List of files which the security script backs up and checks
 # for modifications.
