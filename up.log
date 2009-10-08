@@ -1,1 +1,9 @@
-cvs [update aborted]: end of file from server (consult above messages if any)
+? .git
+? .gitignore
+? rcdiff
+? status.log
+? sync.sh
+? up.log
+P pf.conf
+P protocols
+P etc.sgi/Makefile.inc
