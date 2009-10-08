@@ -3,29 +3,6 @@
 #   (use "git add <file>..." to update what will be committed)
 #   (use "git checkout -- <file>..." to discard changes in working directory)
 #
-#	modified:   MAKEDEV.common
-#	modified:   Makefile
-#	modified:   changelist
-#	modified:   etc.alpha/MAKEDEV
-#	modified:   etc.amd64/MAKEDEV
-#	modified:   etc.armish/MAKEDEV
-#	modified:   etc.hp300/MAKEDEV
-#	modified:   etc.hppa/MAKEDEV
-#	modified:   etc.hppa64/MAKEDEV
-#	modified:   etc.i386/MAKEDEV
-#	modified:   etc.landisk/MAKEDEV
-#	modified:   etc.luna88k/MAKEDEV
-#	modified:   etc.mac68k/MAKEDEV
-#	modified:   etc.macppc/MAKEDEV
-#	modified:   etc.palm/MAKEDEV
-#	modified:   etc.sgi/MAKEDEV
-#	modified:   etc.socppc/MAKEDEV
-#	modified:   etc.sparc/MAKEDEV
-#	modified:   etc.sparc64/MAKEDEV
-#	modified:   etc.vax/MAKEDEV
-#	modified:   etc.zaurus/MAKEDEV
-#	modified:   mtree/BSD.x11.dist
-#	modified:   netstart
 #	modified:   pf.conf
 #	modified:   status.log
 #	modified:   up.log
