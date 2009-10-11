@@ -4,6 +4,3 @@
 ? status.log
 ? sync.sh
 ? up.log
-P pf.conf
-P protocols
-P etc.sgi/Makefile.inc
