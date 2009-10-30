@@ -4,5 +4,3 @@
 ? status.log
 ? sync.sh
 ? up.log
-P Makefile
-P moduli
