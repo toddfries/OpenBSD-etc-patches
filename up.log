@@ -4,3 +4,6 @@
 ? status.log
 ? sync.sh
 ? up.log
+P bind/db.loopback6.arpa
+P bind/named-dual.conf
+P bind/named-simple.conf
