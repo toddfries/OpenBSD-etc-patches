@@ -4,4 +4,3 @@
 ? status.log
 ? sync.sh
 ? up.log
-P mail/smtpd.conf
