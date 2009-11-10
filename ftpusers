@@ -44,6 +44,7 @@ _relayd
 _ospf6d
 _snmpd
 _rtadvd
+_rtsol
 _ypldap
 _btd
 _smtpd
