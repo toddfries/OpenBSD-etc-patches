@@ -259,8 +259,7 @@ fi
 
 
 # Configure all the non-loopback interfaces which we know about, but
-# do not start interfaces which must be delayed.
-# Refer to hostname.if(5)
+# do not start interfaces which must be delayed. Refer to hostname.if(5)
 ifmstart "" "trunk vlan carp gif gre pfsync pppoe tun bridge"
 
 # The trunk interfaces need to come up first in this list.
