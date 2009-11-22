@@ -266,7 +266,7 @@ ifmstart "" "trunk vlan carp gif gre pfsync pppoe tun bridge"
 # The trunk interfaces need to come up first in this list.
 # The vlan interfaces need to come up after trunk.
 # Configure all the carp interfaces which we know about before default route.
-ifmstart "trunk vlan carp" "bridge"
+ifmstart "trunk vlan carp"
 
 if [ "$ip6kernel" = "YES" -a "x$rtsolif" != "x" ]; then
 	fw=`sysctl -n net.inet6.ip6.forwarding`
@@ -335,13 +335,10 @@ esac
 # Configure PPPoE, GIF, GRE and TUN interfaces, delayed because they require
 # routes to be set.  TUN might depend on PPPoE, and GIF or GRE may depend on
 # either of them.
-ifmstart "pppoe tun gif gre" "bridge"
+ifmstart "pppoe tun gif gre bridge"
 
 # reject 127/8 other than 127.0.0.1
 route -qn add -net 127 127.0.0.1 -reject > /dev/null
-
-# Configure all the bridges.
-ifmstart "bridge"
 
 if [ "$ip6kernel" = "YES" ]; then
 	# this is to make sure DAD is completed before going further.
