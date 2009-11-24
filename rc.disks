@@ -110,8 +110,8 @@ if [ "$(mount | grep "* / *read-only")" ]; then
 	ro=1
 fi
 if mount / 2> /dev/null; then
-	rm -rf /dev/disks
-	mkdir /dev/disks
+	rm -rf ${prefix}
+	mkdir ${prefix}
 else
 	mount -t mfs swap ${prefix}
 fi
