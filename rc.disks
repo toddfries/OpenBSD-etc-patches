@@ -115,15 +115,22 @@ if mount / 2> /dev/null; then
 else
 	mount -t mfs swap ${prefix}
 fi
-i=0
+
 for d in $(get_dkdevs); do
+	invalid=0
 	savelabel $d
+
+	sectors=$(showlabel | grepr "total sectors: ")
+	[ "$sectors" ] || invalid=1
 
 	uuid="$(showlabel | grepr "label: ")"
 	uuid="${uuid}-$(showlabel | grepr "total sectors: ")"
 	uuid="${uuid}-$(bioctl $d 2> /dev/null | grepr "*, serial ")"
 	echo -n "$d $uuid:"
 	if [ "${uuid}" = "--" ]; then
+		invalid=1
+	fi
+	if [ invalid -gt 0 ]; then
 		echo "<INVALID>"
 		continue
 	fi
