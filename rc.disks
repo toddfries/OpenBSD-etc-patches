@@ -114,6 +114,10 @@ for d in $(get_dkdevs); do
 	uuid="${uuid}-$(showlabel | grep "total sectors: ")"
 	uuid="${uuid}-$(bioctl $d 2> /dev/null | grep "*, serial ")"
 	echo -n "$d $uuid:"
+	if [ "${uuid}" = "--" ]; then
+		echo "<INVALID>"
+		continue
+	fi
 	name=$(cat $conf 2> /dev/null | grep "${uuid}:")
 	if ! [ "$name" ]; then
 		newdisk "$uuid"
@@ -122,8 +126,8 @@ for d in $(get_dkdevs); do
 	echo $name
 	for slice in a b c d e f g h i j k l m n o p
 	do
-		ln -s /dev/${d}${slice} ${prefix}/${name}${slice}
-		ln -s /dev/r${d}${slice} ${prefix}/r${name}${slice}
+		ln -s /dev/${d}${slice} ${prefix}/${name}${slice} 2> /dev/null
+		ln -s /dev/r${d}${slice} ${prefix}/r${name}${slice} 2> /dev/null
 	done
 done
 if [ ro -gt 0 ]; then
