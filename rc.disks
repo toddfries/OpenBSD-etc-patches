@@ -4,11 +4,20 @@ prefix=/dev/disks
 conf=/etc/disks.conf
 
 # read stdin for pattern ($1) and remove it from the output
-grep() {
+grepr() {
 	local pat="$1"
 	while read line; do
 		if [[ $line = ${pat}* ]]; then
 			line=${line#${pat}}
+			echo "$line"
+		fi
+	done
+}
+# grep only
+grep() {
+	local pat="$1"
+	while read line; do
+		if [[ $line = ${pat}* ]]; then
 			echo "$line"
 		fi
 	done
@@ -110,15 +119,15 @@ i=0
 for d in $(get_dkdevs); do
 	savelabel $d
 
-	uuid="$(showlabel | grep "label: ")"
-	uuid="${uuid}-$(showlabel | grep "total sectors: ")"
-	uuid="${uuid}-$(bioctl $d 2> /dev/null | grep "*, serial ")"
+	uuid="$(showlabel | grepr "label: ")"
+	uuid="${uuid}-$(showlabel | grepr "total sectors: ")"
+	uuid="${uuid}-$(bioctl $d 2> /dev/null | grepr "*, serial ")"
 	echo -n "$d $uuid:"
 	if [ "${uuid}" = "--" ]; then
 		echo "<INVALID>"
 		continue
 	fi
-	name=$(cat $conf 2> /dev/null | grep "${uuid}:")
+	name=$(cat $conf 2> /dev/null | grepr "${uuid}:")
 	if ! [ "$name" ]; then
 		newdisk "$uuid"
 	fi
