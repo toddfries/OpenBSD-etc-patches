@@ -1,6 +1,7 @@
 #!/bin/sh
 
 prefix=/dev/disks
+conf=/etc/disks.conf
 
 # read stdin for pattern ($1) and remove it from the output
 grep() {
@@ -80,23 +81,52 @@ showlabel() {
 	done
 	IFS=$_oifs
 }
+newdisk() {
+	local i=0 uuid="$1"
+	if [ -f $conf ]; then
+		while [ "$(grep "*:hd${i}" < $conf)" ]; do
+			let i=i+1
+		done
+	fi
+	name="hd${i}"
+	# attempt to save, if we can't, do so later
+	(echo "$uuid:$name" >> $conf) > /dev/null 2>&1
+}
 
 if [ "$(mount | grep "* on ${prefix}")" ]; then
 	umount ${prefix} || exit
 fi
-mount -t mfs swap ${prefix}
+ro=0
+if [ "$(mount | grep "* / *read-only")" ]; then
+	ro=1
+fi
+if mount / 2> /dev/null; then
+	rm -rf /dev/disks
+	mkdir /dev/disks
+else
+	mount -t mfs swap ${prefix}
+fi
+i=0
 for d in $(get_dkdevs); do
 	savelabel $d
 
 	uuid="$(showlabel | grep "label: ")"
-	uuid="${uuid}-$(showlabel | grep "total sectors: ")-"
+	uuid="${uuid}-$(showlabel | grep "total sectors: ")"
 	uuid="${uuid}-$(bioctl $d 2> /dev/null | grep "*, serial ")"
-	echo "$d uuid = $uuid"
-	name=$(cat /etc/disks.conf | grep "$uuid:")
-	[ "$name" ] || continue
+	echo -n "$d $uuid:"
+	name=$(cat $conf 2> /dev/null | grep "${uuid}:")
+	if ! [ "$name" ]; then
+		newdisk "$uuid"
+	fi
+
+	echo $name
 	for slice in a b c d e f g h i j k l m n o p
 	do
 		ln -s /dev/${d}${slice} ${prefix}/${name}${slice}
 		ln -s /dev/r${d}${slice} ${prefix}/r${name}${slice}
 	done
 done
+if [ ro -gt 0 ]; then
+	mount -o update,ro /
+fi
+mount -o update,ro /
