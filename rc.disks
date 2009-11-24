@@ -149,4 +149,3 @@ done
 if [ ro -gt 0 ]; then
 	mount -o update,ro /
 fi
-mount -o update,ro /
