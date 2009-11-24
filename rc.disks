@@ -1,0 +1,102 @@
+#!/bin/sh
+
+prefix=/dev/disks
+
+# read stdin for pattern ($1) and remove it from the output
+grep() {
+	local pat="$1"
+	while read line; do
+		if [[ $line = ${pat}* ]]; then
+			line=${line#${pat}}
+			echo "$line"
+		fi
+	done
+}
+
+get_dkdevs() {
+	local _n _oifs=$IFS
+	IFS=","
+	bsort $(for _n in $(sysctl -n hw.disknames); do dkecho "$_n"; done )
+	IFS=$_oifs
+}
+dkecho() {
+	case "$1" in
+	sd*|wd*) echo "$1";;
+	esac
+}
+bsort() {
+	local _l _a=$1 _b
+
+	[[ $# -gt 0 ]] || return
+
+	shift
+	for _b; do
+		if [[ $_a != $_b ]] ; then
+			if [[ $_a > $_b ]] ; then
+				_l="$_a $_l"; _a=$_b
+			else
+				_l="$_b $_l"
+			fi
+		fi
+	done
+
+	# Output the smallest value found.
+	echo -n "$_a "
+
+	# Sort remaining values.
+	bsort $_l
+}
+# not an exact science, but this is about keeping a line together anyway
+escapespace() {
+	local arg=
+	while read args; do
+		for arg in $args; do
+			echo -n "${arg}_"
+		done
+		echo
+	done
+}
+
+# presume all filesystems are RO, save a disklabel to memory
+savelabel() {
+	local i=0 disk=$1 line=
+	set -A dklabel
+	for line in $(disklabel "$disk" 2> /dev/null | escapespace); do
+		dklabel[$i]="$line"
+		let i=i+1
+	done
+}
+
+# output mirrors disklabel output, spaces collapsed
+showlabel() {
+	local i=0 _oifs="$IFS" a=
+	IFS="_"
+	while [ i -lt ${#dklabel[*]} ]; do
+		for a in ${dklabel[$i]}; do
+			echo -n "$a "
+		done
+		echo
+		let i=i+1
+	done
+	IFS=$_oifs
+}
+
+if [ "$(mount | grep "* on ${prefix}")" ]; then
+	umount ${prefix} || exit
+fi
+mount -t mfs swap ${prefix}
+for d in $(get_dkdevs); do
+	savelabel $d
+
+	uuid="$(showlabel | grep "label: ")"
+	uuid="${uuid}-$(showlabel | grep "total sectors: ")-"
+	uuid="${uuid}-$(bioctl $d 2> /dev/null | grep "*, serial ")"
+	echo "$d uuid = $uuid"
+	name=$(cat /etc/disks.conf | grep "$uuid:")
+	[ "$name" ] || continue
+	for slice in a b c d e f g h i j k l m n o p
+	do
+		ln -s /dev/${d}${slice} ${prefix}/${name}${slice}
+		ln -s /dev/r${d}${slice} ${prefix}/r${name}${slice}
+	done
+done
