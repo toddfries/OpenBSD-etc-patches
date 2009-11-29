@@ -93,10 +93,10 @@ ifstart() {
 			rtsolif="$rtsolif $if"
 			cmd="ifconfig $if $name $mask $bcaddr $ext1 $ext2 up"
 			;;
-		"up")
+		"up"|"down")
 			# The only one of these guaranteed to be set is $if.
 			# The remaining ones exist so that media controls work.
-			cmd="ifconfig $if $name $mask $bcaddr $ext1 $ext2 up"
+			cmd="ifconfig $if $name $mask $bcaddr $ext1 $ext2 $af"
 			;;
 		*)
 			read dt dtaddr
