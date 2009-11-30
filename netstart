@@ -93,11 +93,6 @@ ifstart() {
 			rtsolif="$rtsolif $if"
 			cmd="ifconfig $if $name $mask $bcaddr $ext1 $ext2 up"
 			;;
-		"up"|"down")
-			# The only one of these guaranteed to be set is $if.
-			# The remaining ones exist so that media controls work.
-			cmd="ifconfig $if $name $mask $bcaddr $ext1 $ext2 $af"
-			;;
 		*)
 			read dt dtaddr
 			if [ "$name"  = "alias" ]; then
@@ -120,19 +115,24 @@ ifstart() {
 				cmd2="$dt $dtaddr"
 				;;
 			esac
-			if [ ! -n "$name" ]; then
-				echo "/etc/hostname.$if: invalid network configuration file"
-				return
-			fi
 			case $af in
 			inet)
+				if ! [ "$name" ]; then
+					echo "/etc/hostname.$if: inet alone is considered invalid"
+					return
+				fi
 				[ "$mask" ] && cmd="$cmd netmask $mask"
 				if [ "$bcaddr" -a "X$bcaddr" != "XNONE" ]; then
 					cmd="$cmd broadcast $bcaddr"
 				fi
 				[ "$alias" ] && rtcmd=";route -qn add -host $name 127.0.0.1"
 				;;
-			inet6) [ "$mask" ] && cmd="$cmd prefixlen $mask"
+			inet6)
+				if ! [ "$name" ]; then
+					echo "/etc/hostname.$if: inet6 alone is considered invalid"
+					return
+				fi
+				[ "$mask" ] && cmd="$cmd prefixlen $mask"
 				cmd="$cmd $bcaddr"
 				;;
 			*)
