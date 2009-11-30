@@ -117,8 +117,8 @@ ifstart() {
 			esac
 			case $af in
 			inet)
-				if ! [ "$name" ]; then
-					echo "/etc/hostname.$if: inet alone is considered invalid"
+				if [ ! -n "$name" ]; then
+					echo "/etc/hostname.$if: inet alone is invalid"
 					return
 				fi
 				[ "$mask" ] && cmd="$cmd netmask $mask"
@@ -129,7 +129,7 @@ ifstart() {
 				;;
 			inet6)
 				if ! [ "$name" ]; then
-					echo "/etc/hostname.$if: inet6 alone is considered invalid"
+					echo "/etc/hostname.$if: inet6 alone is invalid"
 					return
 				fi
 				[ "$mask" ] && cmd="$cmd prefixlen $mask"
