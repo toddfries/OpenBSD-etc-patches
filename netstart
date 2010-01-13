@@ -58,20 +58,8 @@ ifstart() {
 
 	# Now parse the hostname.* file
 	while :; do
-		if [ "$cmd2" ]; then
-			# We are carrying over from the 'read dt dtaddr'
-			# last time.
-			set -- $cmd2
-			af="$1" name="$2" mask="$3" bcaddr="$4" ext1="$5" cmd2=
-			# Make sure and get any remaining args in ext2,
-			# like the read below
-			i=1
-			while [ $i -lt 6 -a -n "$1" ]; do shift; let i=i+1; done
-			ext2="$@"
-		else
-			# Read the next line or exit the while loop.
-			read af name mask bcaddr ext1 ext2 || break
-		fi
+		# Read the next line or exit the while loop.
+		read af name mask bcaddr ext1 ext2 || break
 		# $af can be "dhcp", "up", "rtsol", an address family,
 		# commands, or a comment.
 		case "$af" in
@@ -94,7 +82,6 @@ ifstart() {
 			cmd="ifconfig $if $name $mask $bcaddr $ext1 $ext2 up"
 			;;
 		*)
-			read dt dtaddr
 			if [ "$name"  = "alias" ]; then
 				# perform a 'shift' of sorts
 				alias=$name
@@ -106,15 +93,14 @@ ifstart() {
 			else
 				alias=
 			fi
+			if [ "$name" = "tunnel" ]; then
+				# 'shift' the other way
+				ext1="$mask $bcaddr $ext1"
+				mask=
+				bcaddr=
+				ext2=
+			fi
 			cmd="ifconfig $if $af $alias $name"
-			case "$dt" in
-			dest)
-				cmd="$cmd $dtaddr"
-				;;
-			[a-z!]*)
-				cmd2="$dt $dtaddr"
-				;;
-			esac
 			case $af in
 			inet)
 				if [ ! -n "$name" ]; then
@@ -142,7 +128,7 @@ ifstart() {
 			cmd="$cmd $ext1 $ext2$rtcmd" rtcmd=
 			;;
 		esac
-		eval "$cmd"
+		echo "$cmd"
 	done < /etc/hostname.$if
 }
 
