@@ -1,5 +1,6 @@
+define(MACHINE,macppc)dnl
 vers(__file__,
-	{-$OpenBSD: MAKEDEV.md,v 1.33 2008/06/12 20:39:29 todd Exp $-},
+	{-$OpenBSD: MAKEDEV.md,v 1.40 2009/08/13 15:12:36 deraadt Exp $-},
 etc.MACHINE)dnl
 dnl
 dnl Copyright (c) 2001-2006 Todd T. Fries <todd@OpenBSD.org>
@@ -74,7 +75,6 @@ _DEV(ulpt, 64)
 _DEV(urio, 65)
 _DEV(usb, 61)
 _DEV(uscan, 74)
-_DEV(vi, 45)
 _TITLE(spec)
 _DEV(apm, 25)
 _DEV(au, 44)
@@ -97,11 +97,13 @@ _DEV(systrace, 50)
 _DEV(tun, 23)
 _DEV(tuner, 75)
 _DEV(uk, 41)
-_DEV(xfs, 51)
+_DEV(vi, 45)
+_DEV(nnpfs, 51)
+_DEV(vscsi, 83)
 dnl
 divert(__mddivert)dnl
 dnl
-_std(1, 2, 43, 3, 6)
+_std(1, 2, 43, 6)
 	M xf86		c 2 4 600
 	M openprom	c 82 0 640 kmem
 	;;
@@ -113,7 +115,8 @@ twrget(all, s64_tzs, tty, a, b)dnl
 twrget(all, s64_czs, cua, a, b)dnl
 target(all, ch, 0)dnl
 target(all, ss, 0, 1)dnl
-target(all, xfs, 0)dnl
+target(all, nnpfs, 0)dnl
+target(all, vscsi, 0)dnl
 twrget(all, flo, fd, 0, 0B, 0C, 0D, 0E, 0F, 0G, 0H)dnl
 twrget(all, flo, fd, 1, 1B, 1C, 1D, 1E, 1F, 1G, 1H)dnl
 target(all, pty, 0)dnl
@@ -122,7 +125,7 @@ target(all, tun, 0, 1, 2, 3)dnl
 target(all, xy, 0, 1, 2, 3)dnl
 target(all, rd, 0)dnl
 target(all, cd, 0, 1)dnl
-target(all, sd, 0, 1, 2, 3, 4)dnl
+target(all, sd, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9)dnl
 target(all, vnd, 0, 1, 2, 3)dnl
 target(all, ccd, 0, 1, 2, 3)dnl
 target(all, gpio, 0, 1, 2)dnl
@@ -131,3 +134,4 @@ target(all, bthub, 0, 1, 2)dnl
 target(ramd, ttya, 0, 1)dnl
 target(ramd, ttyb, 0, 1)dnl
 target(ramd, pty, 0)dnl
+target(ramd, bio)dnl

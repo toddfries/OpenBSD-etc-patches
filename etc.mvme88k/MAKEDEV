@@ -3,9 +3,9 @@
 # THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
 # generated from:
 #
-#	OpenBSD: etc.mvme88k/MAKEDEV.md,v 1.19 2007/05/28 22:26:02 todd Exp 
-#	OpenBSD: MAKEDEV.common,v 1.36 2007/07/23 23:21:25 todd Exp 
-#	OpenBSD: MAKEDEV.mi,v 1.77 2005/10/06 06:43:19 otto Exp 
+#	OpenBSD: etc.mvme88k/MAKEDEV.md,v 1.24 2009/08/13 15:12:36 deraadt Exp 
+#	OpenBSD: MAKEDEV.common,v 1.45 2009/08/13 15:12:36 deraadt Exp 
+#	OpenBSD: MAKEDEV.mi,v 1.79 2009/01/25 17:30:48 miod Exp 
 #	OpenBSD: MAKEDEV.sub,v 1.14 2005/02/07 06:14:18 david Exp 
 #
 #
@@ -61,7 +61,8 @@
 #	vmel0	VMEbus D32 space
 #	vmes0	VMEbus D16 space
 #	uk*	Unknown SCSI devices
-#	xfs*	XFS filesystem node
+#	nnpfs*	NNPFS filesystem node
+#	vscsi*	Virtual SCSI controller
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 T=$0
 
@@ -198,13 +199,16 @@ std)
 	M stdout	c 21 1
 	M stderr	c 21 2
 	M ksyms		c 43 0 640 kmem
-	M drum		c 3 0 640 kmem
 	M klog		c 6 0 600
 	;;
 
 
-xfs*)
-	M xfs$U c 51 $U 600
+vscsi*)
+	M vscsi$U c 53 $U 600
+	;;
+
+nnpfs*)
+	M nnpfs$U c 51 $U 600
 	;;
 
 uk*)
@@ -241,7 +245,7 @@ sram0)
 
 *random)
 	n=0
-	for pre in " " s u p a
+	for pre in " " s u a
 	do
 		M ${pre}random c 40 $n 644
 		n=$(($n+1))
@@ -369,7 +373,7 @@ local)
 	;;
 
 ramdisk)
-	R pty0 tty00 ttya rd0 cd0 cd1 st0 st1 sd0 sd1 sd2 sd3 sd4
+	R bio pty0 tty00 ttya rd0 cd0 cd1 st0 st1 sd0 sd1 sd2 sd3 sd4
 	R bpf0 std
 	;;
 
@@ -378,8 +382,8 @@ all)
 	R tty02 tty03 tty04 tty05 tty06 tty07 ttya ttyb ccd0 ccd1 ccd2
 	R ccd3 vnd0 vnd1 vnd2 vnd3 sd0 sd1 sd2 sd3 sd4 cd0 cd1 rd0
 	R tun0 tun1 tun2 tun3 bio bpf0 bpf1 bpf2 bpf3 bpf4 bpf5 bpf6
-	R bpf7 bpf8 bpf9 pty0 xfs0 ss0 ch0 vmel0 vmes0 nvram0 sram0
-	R ptm local uk0 random lkm pf systrace std st0 st1 fd
+	R bpf7 bpf8 bpf9 pty0 vscsi0 nnpfs0 ss0 ch0 vmel0 vmes0 nvram0
+	R sram0 ptm local uk0 random lkm pf systrace std st0 st1 fd
 	;;
 
 sd*|ccd*)

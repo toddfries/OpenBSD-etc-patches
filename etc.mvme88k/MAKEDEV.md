@@ -1,5 +1,6 @@
+define(MACHINE,mvme88k)dnl
 vers(__file__,
-	{-$OpenBSD: MAKEDEV.md,v 1.19 2007/05/28 22:26:02 todd Exp $-},
+	{-$OpenBSD: MAKEDEV.md,v 1.24 2009/08/13 15:12:36 deraadt Exp $-},
 etc.MACHINE)dnl
 dnl
 dnl Copyright (c) 2001-2006 Todd T. Fries <todd@OpenBSD.org>
@@ -72,7 +73,8 @@ target(all, vmel, 0)dnl
 dnl
 target(all, ch, 0)dnl
 target(all, ss, 0)dnl
-target(all, xfs, 0)dnl
+target(all, nnpfs, 0)dnl
+target(all, vscsi, 0)dnl
 target(all, pty, 0)dnl
 target(all, bpf, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9)dnl
 target(all, bio)dnl
@@ -93,6 +95,7 @@ dnl
 twrget(ramd, dart, tty, a)dnl
 twrget(ramd, cl, tty0, 0)dnl
 target(ramd, pty, 0)dnl
+target(ramd, bio)dnl
 _DEV(ramd)
 dnl
 _DEV(std)
@@ -130,10 +133,11 @@ _DEV(tun, 23)
 _DEV(vmel, 31)
 _DEV(vmes, 32)
 _DEV(uk, 41)
-_DEV(xfs, 51)
+_DEV(nnpfs, 51)
+_DEV(vscsi, 53)
 dnl
 divert(__mddivert)dnl
 dnl
-_std(1, 2, 43, 3, 6)
+_std(1, 2, 43, 6)
 	;;
 

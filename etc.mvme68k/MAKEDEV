@@ -3,9 +3,9 @@
 # THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
 # generated from:
 #
-#	OpenBSD: etc.mvme68k/MAKEDEV.md,v 1.19 2007/05/28 22:26:02 todd Exp 
-#	OpenBSD: MAKEDEV.common,v 1.36 2007/07/23 23:21:25 todd Exp 
-#	OpenBSD: MAKEDEV.mi,v 1.77 2005/10/06 06:43:19 otto Exp 
+#	OpenBSD: etc.mvme68k/MAKEDEV.md,v 1.25 2009/08/13 15:12:36 deraadt Exp 
+#	OpenBSD: MAKEDEV.common,v 1.45 2009/08/13 15:12:36 deraadt Exp 
+#	OpenBSD: MAKEDEV.mi,v 1.79 2009/01/25 17:30:48 miod Exp 
 #	OpenBSD: MAKEDEV.sub,v 1.14 2005/02/07 06:14:18 david Exp 
 #
 #
@@ -42,6 +42,7 @@
 #	cuaa-d	On-board call-up devices
 #	ttya-d	On-board serial ports
 #	tty0*	CL-CD2400 serial ports
+#	ttyd*	MC68681 serial ports
 #	ttyw*	WG CL-CD2400 serial ports
 # Pseudo terminals:
 #	ptm	pty master device
@@ -65,7 +66,8 @@
 #	uk*	Unknown SCSI devices
 #	vmel0	VMEbus D32 space
 #	vmes0	VMEbus D16 space
-#	xfs*	XFS filesystem node
+#	nnpfs*	NNPFS filesystem node
+#	vscsi*	Virtual SCSI controller
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 T=$0
 
@@ -202,13 +204,16 @@ std)
 	M stdout	c 21 1
 	M stderr	c 21 2
 	M ksyms		c 43 0 640 kmem
-	M drum		c 3 0 640 kmem
 	M klog		c 6 0 600
 	;;
 
 
-xfs*)
-	M xfs$U c 51 $U 600
+vscsi*)
+	M vscsi$U c 53 $U 600
+	;;
+
+nnpfs*)
+	M nnpfs$U c 51 $U 600
 	;;
 
 vmes0)
@@ -245,7 +250,7 @@ sram0)
 
 *random)
 	n=0
-	for pre in " " s u p a
+	for pre in " " s u a
 	do
 		M ${pre}random c 40 $n 644
 		n=$(($n+1))
@@ -327,6 +332,17 @@ ttyw*)
 	esac
 	;;
 
+ttyd[01])
+	u=${i#ttyd*}
+	case $u in
+	0|1)
+		M ttyd$u c 14 $u 660 dialer uucp
+		M cuad$u c 14 $(($u+128)) 660 dialer uucp
+		;;
+	*) echo unknown tty device $i ;;
+	esac
+	;;
+
 tty0*)
 	u=${i#tty0*}
 	case $u in
@@ -402,16 +418,18 @@ local)
 	;;
 
 ramdisk)
-	R pty0 ttya rd0 cd0 cd1 st0 st1 sd0 sd1 sd2 sd3 sd4 bpf0 std
+	R bio pty0 ttya rd0 cd0 cd1 st0 st1 sd0 sd1 sd2 sd3 sd4 bpf0
+	R std
 	;;
 
 all)
-	R ttyw0 ttyw1 ttyw2 ttyw3 tty00 tty01 tty02 tty03 cuaa cuab
-	R cuac cuad ttya ttyb ttyc ttyd ccd0 ccd1 ccd2 ccd3 vnd0 vnd1
-	R vnd2 vnd3 sd0 sd1 sd2 sd3 sd4 cd0 cd1 rd0 tun0 tun1 tun2
-	R tun3 bio bpf0 bpf1 bpf2 bpf3 bpf4 bpf5 bpf6 bpf7 bpf8 bpf9
-	R pty0 xfs0 ss0 ss1 ch0 vmel0 vmes0 flash0 nvram0 sram0 ptm
-	R local uk0 random lkm pf systrace std st0 st1 fd
+	R ttyw0 ttyw1 ttyw2 ttyw3 ttyd0 ttyd1 tty00 tty01 tty02 tty03
+	R cuaa cuab cuac cuad ttya ttyb ttyc ttyd ccd0 ccd1 ccd2 ccd3
+	R vnd0 vnd1 vnd2 vnd3 sd0 sd1 sd2 sd3 sd4 cd0 cd1 rd0 tun0
+	R tun1 tun2 tun3 bio bpf0 bpf1 bpf2 bpf3 bpf4 bpf5 bpf6 bpf7
+	R bpf8 bpf9 pty0 vscsi0 nnpfs0 ss0 ss1 ch0 vmel0 vmes0 flash0
+	R nvram0 sram0 ptm local uk0 random lkm pf systrace std st0
+	R st1 fd
 	;;
 
 sd*|ccd*)

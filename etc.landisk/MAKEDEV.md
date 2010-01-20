@@ -1,5 +1,6 @@
+define(MACHINE,landisk)dnl
 vers(__file__,
-	{-$OpenBSD: MAKEDEV.md,v 1.9 2008/06/12 20:39:29 todd Exp $-},
+	{-$OpenBSD: MAKEDEV.md,v 1.17 2009/08/13 15:12:36 deraadt Exp $-},
 etc.MACHINE)dnl
 dnl
 dnl Copyright (c) 2001-2004 Todd T. Fries <todd@OpenBSD.org>
@@ -69,7 +70,6 @@ _DEV(ulpt, 66)
 _DEV(urio, 67)
 _DEV(usb, 64)
 _DEV(uscan, 69)
-_DEV(vi, 77)
 _TITLE(spec)
 dnl _DEV(apm, 34)
 _DEV(au, 36)
@@ -81,25 +81,29 @@ _DEV(cry, 47)
 _DEV(fdesc, 7)
 dnl _DEV(iop, 73)
 _DEV(lkm, 35)
+_DEV(music, 58)
 _DEV(pci, 88)
 _DEV(pf, 46)
 _DEV(radio, 97)
+_DEV(rmidi, 57)
 _DEV(rnd, 40)
 _DEV(tun, 33)
 _DEV(uk, 28)
 _DEV(ss, 29)
 _DEV(systrace, 50)
 dnl _DEV(tuner, 75)
-_DEV(xfs, 51)
+_DEV(vi, 77)
+_DEV(nnpfs, 51)
+_DEV(vscsi, 99)
 dnl
 divert(__mddivert)dnl
 dnl
 ramdisk)
 	_recurse std bpf0 wd0 wd1 sd0 tty00 rd0 wsmouse
-	_recurse st0 ttyC0 wskbd0 apm
+	_recurse st0 ttyC0 wskbd0 apm bio
 	;;
 
-_std(1, 2, 8, 3, 6)
+_std(1, 2, 8, 6)
 	;;
 dnl
 dnl *** landisk specific targets
@@ -107,7 +111,8 @@ dnl
 twrget(all, scif, tty, a)dnl
 target(all, ch, 0)dnl
 target(all, ss, 0, 1)dnl
-target(all, xfs, 0)dnl
+target(all, nnpfs, 0)dnl
+target(all, vscsi, 0)dnl
 twrget(all, flo, fd, 0, 0B, 0C, 0D, 0E, 0F, 0G, 0H)dnl
 twrget(all, flo, fd, 1, 1B, 1C, 1D, 1E, 1F, 1G, 1H)dnl
 target(all, pty, 0)dnl
@@ -117,6 +122,6 @@ target(all, tun, 0, 1, 2, 3)dnl
 target(all, xy, 0, 1, 2, 3)dnl
 target(all, rd, 0)dnl
 target(all, cd, 0, 1)dnl
-target(all, sd, 0, 1, 2, 3, 4)dnl
+target(all, sd, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9)dnl
 target(all, vnd, 0, 1, 2, 3)dnl
 target(all, ccd, 0, 1, 2, 3)dnl

@@ -1,4 +1,4 @@
-#	$OpenBSD: changelist,v 1.57 2008/06/08 03:03:37 jdixon Exp $
+#	$OpenBSD: changelist,v 1.64 2010/01/01 00:24:09 dlg Exp $
 #
 # List of files which the security script backs up and checks
 # for modifications.
@@ -62,10 +62,13 @@
 /etc/mail/localhost.cf
 /etc/mail/mailertable
 /etc/mail/relay-domains
++/etc/mail/secrets
 /etc/mail/sendmail.cf
+/etc/mail/smtpd.conf
 /etc/mail/spamd.conf
 /etc/mail/submit.cf
 /etc/mail/trusted-users
+/etc/mail/virtual
 /etc/mail/virtusertable
 /etc/mailer.conf
 /etc/man.conf
@@ -110,6 +113,7 @@
 +/etc/rndc.key
 /etc/rpc
 /etc/ripd.conf
+/etc/rtadvd.conf
 /etc/sasyncd.conf
 /etc/security
 /etc/sensorsd.conf
@@ -127,10 +131,12 @@
 +/etc/ssh/ssh_host_rsa_key
 /etc/ssh/ssh_host_rsa_key.pub
 /etc/ssh/sshd_config
+/etc/ssl/cert.pem
 /etc/sudoers
 /etc/suid_profile
 /etc/sysctl.conf
 /etc/syslog.conf
+/etc/sysmerge.ignore
 /etc/ttys
 /etc/usermgmt.conf
 /etc/weekly
@@ -151,6 +157,10 @@
 /var/cron/tabs/root
 /var/named/etc/named.conf
 +/var/named/etc/rndc.key
+/var/named/etc/root.hint
+/var/named/standard/localhost
+/var/named/standard/loopback
+/var/named/standard/loopback6.arpa
 /var/www/conf/access.conf
 /var/www/conf/httpd.conf
 /var/www/conf/mime.types

@@ -1,11 +1,10 @@
-#	$OpenBSD: Makefile.inc,v 1.7 2006/07/27 02:53:55 deraadt Exp $
+#	$OpenBSD: Makefile.inc,v 1.9 2009/04/21 09:12:26 deraadt Exp $
 
-.ifdef DESTDIR
-snap_md: bsd bsd.mp bootblocks distrib
+kernels: bsd bsd.mp bootblocks
 	cp ${.CURDIR}/../sys/arch/amd64/compile/GENERIC/bsd \
-	    ${DESTDIR}/snapshot/bsd
+	    ${RELEASEDIR}/bsd
 	cp ${.CURDIR}/../sys/arch/amd64/compile/GENERIC.MP/bsd \
-	    ${DESTDIR}/snapshot/bsd.mp
+	    ${RELEASEDIR}/bsd.mp
 
 bsd:
 	cd ${.CURDIR}/../sys/arch/amd64/conf && config GENERIC
@@ -18,10 +17,11 @@ bsd.mp:
 	    ${MAKE} clean && ${MAKE} depend && exec ${MAKE}
 
 bootblocks:
-	cp ${DESTDIR}/usr/mdec/pxeboot ${DESTDIR}/snapshot
-	cp ${DESTDIR}/usr/mdec/cdboot ${DESTDIR}/snapshot
-	cp ${DESTDIR}/usr/mdec/cdbr ${DESTDIR}/snapshot
+	cp ${DESTDIR}/usr/mdec/pxeboot ${RELEASEDIR}
+	cp ${DESTDIR}/usr/mdec/cdboot ${RELEASEDIR}
+	cp ${DESTDIR}/usr/mdec/cdbr ${RELEASEDIR}
+
+MDEXT=	bsd bsd.mp bsd.rd cd${OSrev}.iso floppy${OSrev}.fs \
+	pxeboot cdboot cdbr
 
 .PHONY: bsd bsd.mp bootblocks
-
-.endif	# DESTDIR check

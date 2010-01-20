@@ -1,9 +1,8 @@
-#	$OpenBSD: Makefile.inc,v 1.6 2006/07/27 01:58:21 deraadt Exp $
+#	$OpenBSD: Makefile.inc,v 1.8 2009/04/21 09:12:29 deraadt Exp $
 
-.ifdef DESTDIR
-snap_md: bsd bootblocks distrib
+kernels: bsd bootblocks
 	cp ${.CURDIR}/../sys/arch/vax/compile/GENERIC/bsd \
-	    ${DESTDIR}/snapshot/bsd
+	    ${RELEASEDIR}/bsd
 
 bsd:
 	cd ${.CURDIR}/../sys/arch/vax/conf && config GENERIC
@@ -11,8 +10,8 @@ bsd:
 	    ${MAKE} clean && ${MAKE} depend && exec ${MAKE}
 
 bootblocks:
-	mopa.out ${DESTDIR}/usr/mdec/boot ${DESTDIR}/snapshot/boot.mop
+	mopa.out ${DESTDIR}/usr/mdec/boot ${RELEASEDIR}/boot.mop
+
+MDEXT=	bsd bsd.rd boot.mop
 
 .PHONY: bsd bootblocks
-
-.endif  # DESTDIR check

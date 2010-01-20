@@ -1,9 +1,13 @@
-# $OpenBSD: dot.login,v 1.3 2002/06/09 06:15:15 todd Exp $
+# $OpenBSD: dot.login,v 1.5 2009/05/06 22:02:05 millert Exp $
 #
 # csh login file
 
 if ( ! $?TERMCAP ) then
-	tset -Q  '-mdialup:?vt100' $TERM
+	if ( $?XTERM_VERSION ) then
+		tset -IQ '-munknown:?vt220' $TERM
+	else
+		tset -Q '-munknown:?vt220' $TERM
+	endif
 endif
 
 stty	newcrt crterase
@@ -14,4 +18,4 @@ set	ignoreeof
 setenv	EXINIT		'set ai sm noeb'
 setenv	HOSTALIASES	 $HOME/.hostaliases
 
-if ( -x /usr/games/fortune) /usr/games/fortune
+if (-x /usr/games/fortune) /usr/games/fortune

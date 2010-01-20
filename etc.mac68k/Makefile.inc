@@ -1,20 +1,14 @@
-#	$OpenBSD: Makefile.inc,v 1.10 2006/07/27 02:53:55 deraadt Exp $
+#	$OpenBSD: Makefile.inc,v 1.13 2009/04/22 16:16:22 deraadt Exp $
 
-.ifdef DESTDIR
-snap_md: bsd bootblocks distrib
+kernels: bsd
 	cp ${.CURDIR}/../sys/arch/mac68k/compile/GENERIC/bsd \
-	    ${DESTDIR}/snapshot/bsd
-	printf "disable ncrscsi\nenable sbc\nquit" | config -e \
-	    -o ${DESTDIR}/snapshot/bsdsbc ${DESTDIR}/snapshot/bsd
+	    ${RELEASEDIR}/bsd
 
 bsd:
 	cd ${.CURDIR}/../sys/arch/mac68k/conf && config GENERIC
 	cd ${.CURDIR}/../sys/arch/mac68k/compile/GENERIC && \
 	    ${MAKE} clean && ${MAKE} depend && exec ${MAKE}
 
-bootblocks:
-	#none needed
+MDEXT=	bsd bsd.rd 				# utils??
 
-.PHONY: bsd bootblocks
-
-.endif	# DESTDIR check
+.PHONY: bsd

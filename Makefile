@@ -1,9 +1,9 @@
-#	$OpenBSD: Makefile,v 1.265 2008/06/08 03:03:37 jdixon Exp $
+#	$OpenBSD: Makefile,v 1.284 2009/12/27 19:28:27 ajacoutot Exp $
 
 TZDIR=		/usr/share/zoneinfo
 LOCALTIME=	Canada/Mountain
 
-NOOBJ=	oobj
+NOOBJ=
 
 .if exists(etc.${MACHINE}/Makefile.inc)
 .include "etc.${MACHINE}/Makefile.inc"
@@ -21,14 +21,16 @@ BIN1=	changelist ccd.conf csh.cshrc csh.login csh.logout daily dhcpd.conf \
 	etc.${MACHINE}/disktab dhclient.conf mailer.conf ntpd.conf \
 	moduli pf.os sensorsd.conf ifstated.conf
 
-.if ${MACHINE} != "aviion" && ${MACHINE} != "landisk" && \
-    ${MACHINE} != "mvme68k" && ${MACHINE} != "mvme88k" && \
-    ${MACHINE} != "socppc"
+.if ${MACHINE} != "aviion" && ${MACHINE} != "mvme68k" && \
+    ${MACHINE} != "mvme88k"
 BIN1+=	wsconsctl.conf
 .endif
 
 # -rw-rw-r--
 BIN2=	motd
+
+MISETS=	base${OSrev}.tgz comp${OSrev}.tgz misc${OSrev}.tgz \
+	man${OSrev}.tgz game${OSrev}.tgz etc${OSrev}.tgz
 
 PCS=	pcs750.bin
 
@@ -72,7 +74,7 @@ distribution-etc-root-var: distrib-dirs
 	    chmod 644 ${DESTDIR}/etc/login.conf
 	${INSTALL} -c -o ${BINOWN} -g ${BINGRP} -m 664 ${BIN2} ${DESTDIR}/etc
 	${INSTALL} -c -o root -g wheel -m 600 hosts.equiv ${DESTDIR}/etc
-	${INSTALL} -c -o root -g wheel -m 600 crontab ${DESTDIR}/var/cron/tabs/root
+	${INSTALL} -c -o root -g crontab -m 600 crontab ${DESTDIR}/var/cron/tabs/root
 	${INSTALL} -c -o root -g wheel -m 600 master.passwd ${DESTDIR}/etc
 	pwd_mkdb -p -d ${DESTDIR}/etc /etc/master.passwd
 	${INSTALL} -c -o root -g wheel -m 600 bgpd.conf ${DESTDIR}/etc
@@ -98,6 +100,8 @@ distribution-etc-root-var: distrib-dirs
 		    ${DESTDIR}/root/.login; \
 		${INSTALL} -c -o root -g wheel -m 644 dot.profile \
 		    ${DESTDIR}/root/.profile; \
+		${INSTALL} -c -o root -g wheel -m 644 dot.Xdefaults \
+		    ${DESTDIR}/root/.Xdefaults; \
 		rm -f ${DESTDIR}/.cshrc ${DESTDIR}/.profile; \
 		${INSTALL} -c -o root -g wheel -m 644 dot.cshrc \
 		    ${DESTDIR}/.cshrc; \
@@ -112,6 +116,8 @@ distribution-etc-root-var: distrib-dirs
 		    ${DESTDIR}/etc/skel/.mailrc; \
 		${INSTALL} -c -o root -g wheel -m 644 dot.profile \
 		    ${DESTDIR}/etc/skel/.profile; \
+		${INSTALL} -c -o root -g wheel -m 644 dot.Xdefaults \
+		    ${DESTDIR}/etc/skel/.Xdefaults; \
 		${INSTALL} -c -o root -g wheel -m 600 /dev/null \
 		    ${DESTDIR}/etc/skel/.ssh/authorized_keys
 	cd kerberosV; \
@@ -248,6 +254,12 @@ distribution-etc-root-var: distrib-dirs
 distribution:
 	exec ${SUDO} ${MAKE} distribution-etc-root-var
 	cd .. && exec ${SUDO} ${MAKE} install
+	touch ${DESTDIR}/var/db/sysmerge/etcsum
+	TMPSUM=`mktemp /tmp/_etcsum.XXXXXXXXXX` || exit 1; \
+	sort ../distrib/sets/lists/etc/{mi,md.${MACHINE}} > $${TMPSUM}; \
+	cd ${DESTDIR} && \
+		xargs cksum < $${TMPSUM} > ${DESTDIR}/var/db/sysmerge/etcsum; \
+	rm -f $${TMPSUM}
 
 distrib-dirs:
 	if [ ! -d ${DESTDIR}/. ]; then \
@@ -264,76 +276,19 @@ release:
 	@echo setenv RELEASEDIR before building a release.
 	@false
 .else
-release: distribution snap_pre snap_md
-	cd ${.CURDIR}/../distrib/notes && ${MAKE} && exec ${SUDO} ${MAKE} install
-	cd ${.CURDIR}/../distrib/sets && exec ${SUDO} sh maketars ${OSrev}
-	-cp ${DESTDIR}/snapshot/*bsd* ${RELEASEDIR}
-	-cp ${DESTDIR}/snapshot/*boot* ${RELEASEDIR}
-	-cp ${DESTDIR}/snapshot/cdbr ${RELEASEDIR}
-	-cp ${DESTDIR}/snapshot/*BOOT* ${RELEASEDIR}
-	-cp ${DESTDIR}/snapshot/cd*.iso ${RELEASEDIR}
-	-cp ${DESTDIR}/snapshot/Packages ${RELEASEDIR}
-	-cp ${DESTDIR}/snapshot/INSTALL.* ${RELEASEDIR}
-	-cp ${DESTDIR}/snapshot/*.fs ${DESTDIR}/snapshot/*.fs.gz ${RELEASEDIR}
-	-cd ${RELEASEDIR}; \
-		md5 *bsd!(*.gz) *boot* cdbr *BOOT* INSTALL.* Packages *.fs \
-		    *.iso *.gz *.tgz > MD5
-	-cd ${RELEASEDIR} && sort -o MD5 MD5
 
-snap_pre:
-	${SUDO} /bin/rm -rf ${DESTDIR}/snapshot
-	${SUDO} ${INSTALL} -d -o root -g wheel -m 755 ${DESTDIR}/snapshot
+release-sets:
+	cd ${.CURDIR}/../distrib/sets && exec ${SUDO} sh maketars ${OSrev}
+
+sha:
+	-cd ${RELEASEDIR}; \
+	    sum -a sha256 INSTALL.`arch -ks` ${MDEXT} ${MISETS} > SHA256
+
+release: distribution kernels release-sets distrib sha
 
 .endif
 
 .endif	# DESTDIR check
-
-MAKEDEVARCHS+= alpha
-MAKEDEVARCHS+= amd64
-MAKEDEVARCHS+= armish
-MAKEDEVARCHS+= hp300
-MAKEDEVARCHS+= hppa
-MAKEDEVARCHS+= hppa64
-MAKEDEVARCHS+= i386
-MAKEDEVARCHS+= landisk
-MAKEDEVARCHS+= luna88k
-MAKEDEVARCHS+= mac68k
-MAKEDEVARCHS+= macppc
-MAKEDEVARCHS+= mvme68k
-MAKEDEVARCHS+= mvme88k
-#MAKEDEVARCHS+= mvmeppc
-MAKEDEVARCHS+= sgi
-MAKEDEVARCHS+= socppc
-MAKEDEVARCHS+= sparc
-MAKEDEVARCHS+= sparc64
-MAKEDEVARCHS+= vax
-MAKEDEVARCHS+= zaurus
-
-clean:
-	rm -f etc.${MACHINE}/MAKEDEV
-
-cleandir:
-	cd ${.CURDIR}; for m in ${MAKEDEVARCHS}; do \
-	    ${MAKE} MACHINE=$$m clean; done
-
-MAKEDEVSRC=	MAKEDEV.mi MAKEDEV.sub MAKEDEV.common
-MAKEDEVDOC=	MAKEDEV.man MAKEDEV.mansub MAKEDEV.common
-m4: etc.${M}/MAKEDEV
-man: ${.CURDIR}/../share/man/man8/man.${M}/MAKEDEV.8
-
-etc.${M}/MAKEDEV: ${MAKEDEVSRC} etc.${M}/MAKEDEV.md
-	@echo "==> etc.${M}/MAKEDEV"
-	m4 -DMACHINE=${M} MAKEDEV.mi > etc.${M}/.MAKEDEV.tmp && \
-	    mv etc.${M}/.MAKEDEV.tmp etc.${M}/MAKEDEV || \
-	    rm etc.${M}/.MAKEDEV.tmp
-
-${.CURDIR}/../share/man/man8/man.${M}/MAKEDEV.8: ${MAKEDEVDOC} etc.${M}/MAKEDEV.md
-	m4 -DMACHINE=${M} MAKEDEV.man > \
-	    ${.CURDIR}/../share/man/man8/man8.${M}/MAKEDEV.8
-
-allarchs: ${MAKEDEVSRC} ${MAKEDEVDOC}
-	cd ${.CURDIR}; for m in ${MAKEDEVARCHS}; do \
-	    ${MAKE} M=$$m m4 man; done
 
 distrib:
 	cd ${.CURDIR}/../distrib && \
@@ -342,7 +297,7 @@ distrib:
 DHSIZE=1024 1536 2048 3072 4096
 update-moduli:
 	( \
-		echo -n '#    $Open'; echo 'BSD$'; \
+		echo -n '#    $$Open'; echo 'BSD$$'; \
 		echo '# Time Type Tests Tries Size Generator Modulus'; \
 		( for i in ${DHSIZE}; do \
 			ssh-keygen -b $$i -G /dev/stdout; \
@@ -351,5 +306,12 @@ update-moduli:
 	) > moduli
 
 .PHONY: distribution-etc-root-var distribution distrib-dirs \
-	release allarchs snap_md m4 snap_pre
+	release allarchs kernels release-sets m4
+
+SUBDIR+= etc.alpha etc.amd64 etc.armish etc.aviion etc.hp300 etc.hppa
+SUBDIR+= etc.hppa64 etc.i386 etc.landisk etc.luna88k etc.mac68k etc.macppc
+SUBDIR+= etc.mvme68k etc.mvme88k etc.palm etc.sgi etc.socppc etc.sparc
+SUBDIR+= etc.sparc64 etc.vax etc.zaurus
+
+.include <bsd.subdir.mk>
 .include <bsd.prog.mk>

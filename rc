@@ -1,4 +1,4 @@
-#	$OpenBSD: rc,v 1.316 2008/06/09 22:21:49 mbalmer Exp $
+#	$OpenBSD: rc,v 1.335 2010/01/04 18:03:30 deraadt Exp $
 
 # System startup script run by init on autoboot
 # or after single-user.
@@ -106,7 +106,7 @@ random_seed()
 		    > /dev/null 2>&1
 		dd if=/var/db/host.random of=/dev/arandom bs=1024 count=64 \
 		    > /dev/null 2>&1
-	
+
 		# reset seed file, so that if a shutdown-less reboot occurs,
 		# the next seed is not a repeat
 		dd if=/dev/urandom of=/var/db/host.random bs=1024 count=64 \
@@ -114,6 +114,34 @@ random_seed()
 
 		random_seed_done=1
 	fi
+}
+
+fill_baddynamic()
+{
+	local _service="$1"
+	local _sysctl="net.inet.${_service}.baddynamic"
+	local _name _port _srv _junk _ban
+	local _i=0
+	grep "/${_service}" /etc/services | {
+		IFS=" 	/"
+		while read _name _port _srv _junk; do
+			[ "x${_srv}" = "x${_service}" ] || continue;
+			if [ "x${_ban}" = "x" ]; then
+				_ban="+${_port}"
+			else
+				_ban="${_ban},+${_port}"
+			fi
+			# Flush before argv gets too long
+			if [ $((++_i)) -gt 128 ]; then
+				sysctl ${_sysctl}=${_ban} >/dev/null
+				_ban=""
+				_i=0
+			fi
+		done;
+		if [ "x${_ban}" != "x" ]; then
+			sysctl ${_sysctl}=${_ban} >/dev/null
+		fi
+	}
 }
 
 # End subroutines
@@ -138,9 +166,10 @@ if [ X"$1" = X"shutdown" ]; then
 		echo /etc/rc.shutdown complete.
 
 		# bring carp interfaces down gracefully
-		ifconfig -a|grep '^carp.*:'|cut -f1 -d:|while read if
-		do
-			ifconfig $if down
+		ifconfig | while read a b; do
+			case $a in
+			carp+([0-9]):) ifconfig ${a%:} down ;;
+			esac
 		done
 
 		if [ X"${powerdown}" = X"YES" ]; then
@@ -240,11 +269,11 @@ if [ X"${pf}" != X"NO" ]; then
 		RULES="$RULES\npass out inet6 proto icmp6 all icmp6-type routersol"
 		RULES="$RULES\npass in inet6 proto icmp6 all icmp6-type routeradv"
 	fi
-	RULES="$RULES\npass proto carp"
+	RULES="$RULES\npass proto carp keep state (no-sync)"
 	case `sysctl vfs.mounts.nfs 2>/dev/null` in
 	*[1-9]*)
 		# don't kill NFS
-		RULES="scrub in all no-df\n$RULES"
+		RULES="set reassemble yes no-df\n$RULES"
 		RULES="$RULES\npass in proto { tcp, udp } from any port { 111, 2049 } to any"
 		RULES="$RULES\npass out proto { tcp, udp } from any to any port { 111, 2049 }"
 		;;
@@ -253,13 +282,17 @@ if [ X"${pf}" != X"NO" ]; then
 	pfctl -e
 fi
 
+# Fill net.inet.(tcp|udp).baddynamic lists from /etc/services
+fill_baddynamic udp
+fill_baddynamic tcp
+
 sysctl_conf
 
 # set hostname, turn on network
 echo 'starting network'
 ifconfig -g carp carpdemote 128
 if [ -f /etc/resolv.conf.save ]; then
-	mv /etc/resolv.conf.save /etc/resolv.conf
+	mv -f /etc/resolv.conf.save /etc/resolv.conf
 	touch /etc/resolv.conf
 fi
 . /etc/netstart
@@ -299,6 +332,10 @@ dmesg >/var/run/dmesg.boot
 
 echo 'starting system logger'
 rm -f /dev/log
+if [ X"${httpd_flags}" != X"-u" ]; then
+	rm -f /var/www/dev/log
+	syslogd_flags="${syslogd_flags} -a /var/www/dev/log"
+fi
 if [ X"${named_flags}" != X"NO" ]; then
 	rm -f /var/named/dev/log
 	syslogd_flags="${syslogd_flags} -a /var/named/dev/log"
@@ -332,6 +369,19 @@ if [ X"${named_flags}" != X"NO" ]; then
 	fi
 
 	echo 'starting named';		named $named_flags
+fi
+
+if [ ! -f /etc/isakmpd/private/local.key ]; then
+	echo -n "openssl: generating new isakmpd RSA key... "
+	if /usr/sbin/openssl genrsa -out /etc/isakmpd/private/local.key 2048 \
+	    > /dev/null 2>&1; then
+		chmod 600 /etc/isakmpd/private/local.key
+		openssl rsa -out /etc/isakmpd/local.pub \
+		    -in /etc/isakmpd/private/local.key -pubout > /dev/null 2>&1
+		echo done.
+	else
+		echo failed.
+	fi
 fi
 
 if [ X"${isakmpd_flags}" != X"NO" ]; then
@@ -397,13 +447,13 @@ if [ X"${nfs_server}" = X"YES" -a -s /etc/exports -a \
 	echo -n ' nfsd';		nfsd ${nfsd_flags}
 	if [ X"${lockd}" = X"YES" ]; then
 		echo -n ' rpc.lockd';	rpc.lockd
+		echo -n ' rpc.statd';	rpc.statd
 	fi
 fi
 
 if [ X"${amd}" = X"YES" -a -e ${amd_master} ]; then
 	echo -n ' amd'
-	(cd /etc/amd; amd -l syslog -x error,noinfo,nostats -p \
-	    -a ${amd_dir} `cat ${amd_master}` > /var/run/amd.pid )
+	(cd /etc/amd; amd `cat ${amd_master}`)
 fi
 
 # run rdate before timed/ntpd
@@ -434,10 +484,10 @@ if [ -d /var/crash ]; then
 	savecore ${savecore_flags} /var/crash
 fi
 
-if [ X"${afs}" = X"YES" -a -c /dev/xfs0 ]; then
+if [ X"${afs}" = X"YES" -a -c /dev/nnpfs0 ]; then
 	echo -n 'mounting afs:'
 	mkdir -p -m 0755 /afs
-	mount -t xfs /dev/xfs0 /afs
+	mount -t nnpfs /dev/nnpfs0 /afs
 	/usr/libexec/afsd ${afsd_flags}
 	echo ' done.'
 fi
@@ -559,20 +609,11 @@ if [ ! -f /etc/ssh/ssh_host_key ]; then
 	fi
 fi
 
-if [ ! -f /etc/isakmpd/private/local.key ]; then
-	echo -n "openssl: generating new isakmpd RSA key... "
-	if /usr/sbin/openssl genrsa -out /etc/isakmpd/private/local.key 1024 \
-	    > /dev/null 2>&1; then
-		chmod 600 /etc/isakmpd/private/local.key
-		openssl rsa -out /etc/isakmpd/local.pub \
-		    -in /etc/isakmpd/private/local.key -pubout > /dev/null 2>&1
-		echo done.
-	else
-		echo failed.
-	fi
-fi
-
 echo -n starting network daemons:
+
+if [ X"${sshd_flags}" != X"NO" ]; then
+	echo -n ' sshd';		/usr/sbin/sshd ${sshd_flags};
+fi
 
 if [ X"${snmpd_flags}" != X"NO" ]; then
 	echo -n ' snmpd';		/usr/sbin/snmpd $snmpd_flags
@@ -642,6 +683,13 @@ if [ X"${hostapd_flags}" != X"NO" ]; then
 	echo -n ' hostapd';		/usr/sbin/hostapd ${hostapd_flags};
 fi
 
+if [ X"${bt}" != X"NO" ]; then
+	echo -n ' btd';			/usr/sbin/btd
+	if [ -f ${bt_rules} ]; then
+		btctl -f ${bt_rules}
+	fi
+fi
+
 if [ X"${rwhod}" = X"YES" ]; then
 	echo -n ' rwhod';		rwhod
 fi
@@ -656,6 +704,10 @@ fi
 # mailer other than sendmail, depending on /etc/mailer.conf.
 if [ X"${sendmail_flags}" != X"NO" -a -s /etc/mailer.conf ]; then
 	echo -n ' sendmail';		( /usr/sbin/sendmail ${sendmail_flags} >/dev/null 2>&1 & )
+fi
+
+if [ X"${smtpd_flags}" != X"NO" ]; then
+	echo -n ' smtpd'; smtpd $smtpd_flags
 fi
 
 if [ X"${httpd_flags}" != X"NO" ]; then
@@ -680,16 +732,12 @@ if [ X"${inetd}" = X"YES" -a -e /etc/inetd.conf ]; then
 	echo -n ' inetd';		inetd
 fi
 
-if [ X"${sshd_flags}" != X"NO" ]; then
-	echo -n ' sshd';		/usr/sbin/sshd ${sshd_flags};
-fi
-
 if [ X"${spamd_flags}" != X"NO" ]; then
 	if [ X"${spamd_black}" != X"NO" ]; then
 		spamd_flags="${spamd_flags} -b"
 	fi
 	echo -n ' spamd';		eval /usr/libexec/spamd ${spamd_flags}
-	/usr/libexec/spamd-setup
+	/usr/libexec/spamd-setup -D
 	if [ X"${spamd_black}" = X"NO" ]; then
 		echo -n ' spamlogd'
 		/usr/libexec/spamlogd ${spamlogd_flags}
@@ -731,6 +779,13 @@ if [ X"${krb5_slave_kdc}" = X"YES" ]; then
 	# Remember to enable hpropd in inetd.conf
 fi
 
+# If rc.firstime exists, run it just once, and make sure it is deleted
+if [ -f /etc/rc.firsttime ]; then
+	mv /etc/rc.firsttime /etc/rc.firsttime.run
+	. /etc/rc.firsttime.run 2>&1 | mail -s 'rc.firsttime output' root
+fi
+rm -f /etc/rc.firsttime.run
+
 [ -f /etc/rc.local ] && . /etc/rc.local
 
 echo -n standard daemons:
@@ -765,7 +820,7 @@ if [ X"${wsmoused_flags}" != X"NO" -a -x /usr/sbin/wsmoused ]; then
 fi
 
 # Alternatively, on some architectures, xdm may be started in /etc/ttys.
-if [ X"${xdm_flags}" != X"NO" ]; then
+if [ X"${xdm_flags}" != X"NO" -a -x /usr/X11R6/bin/xdm ]; then
 	echo 'starting xdm...';		/usr/X11R6/bin/xdm ${xdm_flags}
 fi
 

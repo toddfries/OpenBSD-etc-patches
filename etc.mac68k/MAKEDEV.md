@@ -1,5 +1,6 @@
+define(MACHINE,mac68k)dnl
 vers(__file__,
-	{-$OpenBSD: MAKEDEV.md,v 1.25 2007/05/28 22:26:02 todd Exp $-},
+	{-$OpenBSD: MAKEDEV.md,v 1.30 2009/08/13 15:12:36 deraadt Exp $-},
 etc.MACHINE)dnl
 dnl
 dnl Copyright (c) 2001-2006 Todd T. Fries <todd@OpenBSD.org>
@@ -61,11 +62,12 @@ _DEV(ss, 33)
 _DEV(systrace, 50)
 _DEV(tun, 24)
 _DEV(uk, 34)
-_DEV(xfs, 51)
+_DEV(nnpfs, 51)
+_DEV(vscsi, 53)
 dnl
 divert(__mddivert)dnl
 dnl
-_std(1, 2, 37, 3, 6)
+_std(1, 2, 37, 6)
 	;;
 
 tty0*)
@@ -101,7 +103,8 @@ target(all, sd, 0, 1, 2, 3, 4)dnl
 target(all, vnd, 0, 1, 2, 3)dnl
 target(all, ch, 0)dnl
 target(all, ss, 0, 1)dnl
-target(all, xfs, 0)dnl
+target(all, nnpfs, 0)dnl
+target(all, vscsi, 0)dnl
 twrget(all, flo, fd, 0, 0B, 0C, 0D, 0E, 0F, 0G, 0H)dnl
 twrget(all, flo, fd, 1, 1B, 1C, 1D, 1E, 1F, 1G, 1H)dnl
 target(all, pty, 0)dnl
@@ -114,3 +117,4 @@ target(all, ccd, 0, 1, 2, 3)dnl
 target(ramd, asc, 0)dnl
 twrget(ramd, mac_tty0, tty0, 0, 1)dnl
 target(ramd, pty, 0)dnl
+target(ramd, bio)dnl

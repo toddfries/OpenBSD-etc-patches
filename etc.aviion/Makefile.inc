@@ -1,9 +1,8 @@
-#	$OpenBSD: Makefile.inc,v 1.2 2006/07/27 02:53:55 deraadt Exp $
+#	$OpenBSD: Makefile.inc,v 1.4 2009/04/21 09:12:26 deraadt Exp $
 
-.ifdef DESTDIR
-snap_md: bsd bootblocks distrib
+kernels: bsd bootblocks
 	cp ${.CURDIR}/../sys/arch/aviion/compile/GENERIC/bsd \
-	    ${DESTDIR}/snapshot/bsd
+	    ${RELEASEDIR}/bsd
 
 bsd:
 	cd ${.CURDIR}/../sys/arch/aviion/conf && config GENERIC
@@ -11,8 +10,8 @@ bsd:
 	    ${MAKE} clean && ${MAKE} depend && ${MAKE}
 
 bootblocks:
-	cp ${DESTDIR}/usr/mdec/* ${DESTDIR}/snapshot/
+	cp ${DESTDIR}/usr/mdec/* ${RELEASEDIR}/
+
+MDEXT=	bsd bsd.rd	# bootblocks?
 
 .PHONY: bsd bootblocks
-
-.endif	# DESTDIR check

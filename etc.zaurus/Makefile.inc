@@ -1,9 +1,8 @@
-#	$OpenBSD: Makefile.inc,v 1.6 2006/07/27 01:58:21 deraadt Exp $
+#	$OpenBSD: Makefile.inc,v 1.9 2009/06/26 03:57:11 deraadt Exp $
 
-.ifdef DESTDIR
-snap_md: bsd bootblocks distrib
+kernels: bsd bootblocks
 	cp ${.CURDIR}/../sys/arch/zaurus/compile/GENERIC/bsd \
-	    ${DESTDIR}/snapshot/bsd
+	    ${RELEASEDIR}/bsd
 
 bsd:
 	cd ${.CURDIR}/../sys/arch/zaurus/conf && config GENERIC
@@ -11,9 +10,9 @@ bsd:
 	    ${MAKE} clean && ${MAKE} depend && exec ${MAKE}
 
 bootblocks:
-	cp ${DESTDIR}/usr/mdec/zboot ${DESTDIR}/snapshot
-	cp ${DESTDIR}/usr/mdec/zbsdmod.o ${DESTDIR}/snapshot
+	cp ${DESTDIR}/usr/mdec/zboot ${RELEASEDIR}
+	cp ${DESTDIR}/usr/mdec/zbsdmod.o ${RELEASEDIR}
+
+MDEXT=	bsd bsd.rd zboot zbsdmod.o openbsd${OSrev}_arm.ipk Packages
 
 .PHONY: bsd bootblocks
-
-.endif	# DESTDIR check

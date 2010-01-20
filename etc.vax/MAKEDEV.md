@@ -1,5 +1,6 @@
+define(MACHINE,vax)dnl
 vers(__file__,
-	{-$OpenBSD: MAKEDEV.md,v 1.32 2008/06/12 18:52:46 todd Exp $-},
+	{-$OpenBSD: MAKEDEV.md,v 1.38 2009/08/13 15:12:36 deraadt Exp $-},
 etc.MACHINE)dnl
 dnl
 dnl Copyright (c) 2001-2006 Todd T. Fries <todd@OpenBSD.org>
@@ -138,16 +139,17 @@ _DEV(ss, 64)
 _DEV(systrace, 49)
 _DEV(tun, 57)
 _DEV(uk, 65)
-_DEV(xfs, 74)
+_DEV(nnpfs, 74)
+_DEV(vscsi, 78)
 dnl
 divert(__mddivert)dnl
 dnl
 ramdisk)
-	_recurse std bpf0
+	_recurse std bpf0 bio
 	_recurse fd0 sd0 sd1 rd0
 	;;
 
-_std(2, 3, 50, 7, 33)
+_std(2, 3, 50, 33)
 	M ttyg0		c 25 0 600
 	M ttyg1		c 25 1 600
 	M ttyg2		c 25 2 600
@@ -204,7 +206,8 @@ dnl
 dnl target(all, ut, 0)dnl
 dnl target(all, ch, 0)dnl
 target(all, ss, 0)dnl
-dnl target(all, xfs, 0)dnl
+target(all, nnpfs, 0)dnl
+target(all, vscsi, 0)dnl
 target(all, pty, 0)dnl
 target(all, bpf, 0, 1, 2, 3, 4, 5, 6, 7)dnl
 target(all, bio)dnl
