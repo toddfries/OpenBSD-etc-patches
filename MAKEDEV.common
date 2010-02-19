@@ -200,6 +200,8 @@ __devitem({-uall-}, uall, All USB devices,usb)dnl
 _mkdev(uall, uall, {-dnl
 show_target({-usb-})dnl
 -})dnl
+__devitem(disk, disk, {-Disk UID Node-})dnl
+_mkdev(disk, disk, disk, {-M disk b major_disk_b 0 644 operator-})dnl
 __devtitle(tap, Tapes)dnl
 __devitem(tz, tz*, {-DEC TK50 cartridge tape drives-})dnl
 __devitem(st, {-st*-}, SCSI tape drives)dnl
