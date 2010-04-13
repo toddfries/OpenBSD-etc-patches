@@ -1,6 +1,6 @@
 #!/bin/sh -
 #
-#	$OpenBSD: netstart,v 1.128 2009/12/10 00:51:55 todd Exp $
+#	$OpenBSD: netstart,v 1.129 2010/01/12 07:43:41 henning Exp $
 
 # Strip comments (and leading/trailing whitespace if IFS is set)
 # from a file and spew to stdout
@@ -58,20 +58,8 @@ ifstart() {
 
 	# Now parse the hostname.* file
 	while :; do
-		if [ "$cmd2" ]; then
-			# We are carrying over from the 'read dt dtaddr'
-			# last time.
-			set -- $cmd2
-			af="$1" name="$2" mask="$3" bcaddr="$4" ext1="$5" cmd2=
-			# Make sure and get any remaining args in ext2,
-			# like the read below
-			i=1
-			while [ $i -lt 6 -a -n "$1" ]; do shift; let i=i+1; done
-			ext2="$@"
-		else
-			# Read the next line or exit the while loop.
-			read af name mask bcaddr ext1 ext2 || break
-		fi
+		# Read the next line or exit the while loop.
+		read af name mask bcaddr ext1 ext2 || break
 		# $af can be "dhcp", "up", "rtsol", an address family,
 		# commands, or a comment.
 		case "$af" in
@@ -94,7 +82,6 @@ ifstart() {
 			cmd="ifconfig $if $name rtsol $mask $bcaddr $ext1 $ext2 up"
 			;;
 		*)
-			read dt dtaddr
 			if [ "$name"  = "alias" ]; then
 				# perform a 'shift' of sorts
 				alias=$name
@@ -105,6 +92,13 @@ ifstart() {
 				ext2=
 			else
 				alias=
+			fi
+			if [ "$name" = "tunnel" ]; then
+				# 'shift' the other way
+				ext1="$mask $bcaddr $ext1"
+				mask=
+				bcaddr=
+				ext2=
 			fi
 			cmd="ifconfig $if $af $alias $name"
 			case "$dt" in
@@ -203,7 +197,7 @@ fi
 
 # Set the address for the loopback interface.  Bringing the
 # interface up, automatically invokes the IPv6 address ::1)
-ifconfig lo0 inet 127.0.0.1
+ifconfig lo0 127.0.0.1/8
 
 if ifconfig lo0 inet6 >/dev/null 2>&1; then
 	# IPv6 configurations.
