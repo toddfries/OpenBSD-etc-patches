@@ -759,6 +759,9 @@ fi
 echo '.'
 
 mixerctl_conf
+if [ X"${aucat_flags}" != X"NO" ]; then
+	aucat -l ${aucat_flags}
+fi
 
 # KerberosV master KDC
 if [ X"${krb5_master_kdc}" = X"YES" ]; then
