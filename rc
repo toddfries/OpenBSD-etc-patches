@@ -196,6 +196,7 @@ done
 
 # Check parity on raid devices.
 raidctl -P all
+sh /etc/rc.crypto
 
 swapctl -A -t blk
 
