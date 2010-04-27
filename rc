@@ -1,4 +1,4 @@
-#	$OpenBSD: rc,v 1.335 2010/01/04 18:03:30 deraadt Exp $
+#	$OpenBSD: rc,v 1.337 2010/04/25 10:10:51 michele Exp $
 
 # System startup script run by init on autoboot
 # or after single-user.
@@ -620,6 +620,10 @@ if [ X"${snmpd_flags}" != X"NO" ]; then
 	echo -n ' snmpd';		/usr/sbin/snmpd $snmpd_flags
 fi
 
+if [ X"${ldpd_flags}" != X"NO" ]; then
+	echo -n ' ldpd';		/usr/sbin/ldpd $ldpd_flags
+fi
+
 if [ X"${ripd_flags}" != X"NO" ]; then
 	echo -n ' ripd';		/usr/sbin/ripd $ripd_flags
 fi
@@ -759,6 +763,10 @@ fi
 echo '.'
 
 mixerctl_conf
+if [ X"${aucat_flags}" != X"NO" ]; then
+	aucat -l ${aucat_flags}
+fi
+
 if [ X"${aucat_flags}" != X"NO" ]; then
 	aucat -l ${aucat_flags}
 fi
