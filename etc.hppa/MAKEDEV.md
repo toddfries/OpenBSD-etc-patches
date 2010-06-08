@@ -79,6 +79,7 @@ _DEV(vi, 33)
 _DEV(nnpfs, 32)
 _DEV(vscsi, 54)
 _DEV(bthub,55)
+_DEV(diskmap,56)
 dnl
 divert(__mddivert)dnl
 dnl

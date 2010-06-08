@@ -41,7 +41,6 @@ _DEV(rd, 47, 17)
 _DEV(sd, 13, 4)
 _DEV(vnd, 41, 14)
 _DEV(wd, 3, 0)
-_DEV(disk, 0, 20)
 _TITLE(tap)
 _DEV(ch, 17)
 _DEV(st, 14, 5)
@@ -106,6 +105,7 @@ _DEV(uk, 20)
 _DEV(vi, 44)
 _DEV(nnpfs, 51)
 _DEV(vscsi, 90)
+_DEV(diskmap, 91)
 dnl
 divert(__mddivert)dnl
 dnl
@@ -129,6 +129,7 @@ target(all, ch, 0)dnl
 target(all, ss, 0, 1)dnl
 target(all, nnpfs, 0)dnl
 target(all, vscsi, 0)dnl
+target(all, diskmap)dnl
 twrget(all, flo, fd, 0, 0B, 0C, 0D, 0E, 0F, 0G, 0H)dnl
 twrget(all, flo, fd, 1, 1B, 1C, 1D, 1E, 1F, 1G, 1H)dnl
 target(all, pty, 0)dnl

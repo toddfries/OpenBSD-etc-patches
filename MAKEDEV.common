@@ -200,8 +200,6 @@ __devitem({-uall-}, uall, All USB devices,usb)dnl
 _mkdev(uall, uall, {-dnl
 show_target({-usb-})dnl
 -})dnl
-__devitem(disk, disk, {-Disk UID Node-})dnl
-_mkdev(disk, disk, disk, {-M disk b major_disk_b 0 644 operator-})dnl
 __devtitle(tap, Tapes)dnl
 __devitem(tz, tz*, {-DEC TK50 cartridge tape drives-})dnl
 __devitem(st, {-st*-}, SCSI tape drives)dnl
@@ -566,6 +564,8 @@ _mcdev(nnpfs, nnpfs*, nnpfs, {-major_nnpfs_c-}, 600)dnl
 _mcdev(vscsi, vscsi*, vscsi, {-major_vscsi_c-}, 600)dnl
 __devitem(rmidi, rmidi*, Raw MIDI devices,midi)dnl
 _mcdev(rmidi, rmidi*, rmidi, {-major_rmidi_c-}, 666)dnl
+__devitem(diskmap, diskmap, Disk mapper, diskmap)dnl
+_mkdev(diskmap, diskmap, diskmap, {-M diskmap b major_disk_c 0 640 operator-})dnl
 __devtitle(plat, Platform-specific devices)dnl
 __devitem(bktr, bktr*, Video frame grabbers)dnl
 _mcdev(bktr, bktr*, bktr, {-major_bktr_c-}, 644)dnl

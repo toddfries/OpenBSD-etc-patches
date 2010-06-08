@@ -175,6 +175,7 @@ _DEV(vmel, 31)
 _DEV(vmes, 32)
 _DEV(nnpfs, 51)
 _DEV(vscsi, 53)
+_DEV(diskmap, 54)
 dnl
 divert(__mddivert)dnl
 dnl

@@ -80,6 +80,7 @@ _DEV(uk, 32)
 _DEV(vi, 45)
 _DEV(nnpfs, 51)
 _DEV(vscsi, 68)
+_DEV(diskmap, 69)
 dnl
 divert(__mddivert)dnl
 dnl

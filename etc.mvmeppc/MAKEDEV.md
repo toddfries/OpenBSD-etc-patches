@@ -488,6 +488,12 @@ vscsi*)
 	chmod 600 vscsi$unit
 	chown root:wheel vscsi$unit
 	;;
+diskmap*)
+	rm -f diskmap$unit
+	mknod diskmap$unit c 57 $unit
+	chmod 600 diskmap$unit
+	chown root:wheel diskmap$unit
+	;;
 
 altq)
 	mkdir -p altq

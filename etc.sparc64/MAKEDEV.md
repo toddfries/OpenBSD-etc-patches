@@ -119,6 +119,7 @@ _DEV(vi, 44)
 _DEV(nnpfs, 51)
 _DEV(vscsi, 128)
 _DEV(bthub, 129)
+_DEV(diskmap, 130)
 dnl
 divert(__mddivert)dnl
 dnl
