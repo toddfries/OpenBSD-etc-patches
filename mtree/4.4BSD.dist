@@ -1,4 +1,4 @@
-#	$OpenBSD: 4.4BSD.dist,v 1.200 2010/01/04 17:50:38 deraadt Exp $
+#	$OpenBSD: 4.4BSD.dist,v 1.204 2010/05/17 18:14:47 naddy Exp $
 
 /set type=dir uname=root gname=wheel mode=0755
 # .
@@ -254,6 +254,11 @@ libmilter		gname=bin uname=root mode=0755
 # ./usr/include/libmilter
 ..
 
+# ./usr/include/objc
+objc		gname=bin uname=root mode=0755
+# ./usr/include/objc
+..
+
 # ./usr/include/openssl
 openssl		gname=bin uname=root mode=0755
 # ./usr/include/openssl
@@ -333,11 +338,6 @@ site_perl
 ..
 
 # ./usr/libdata/perl5
-..
-
-# ./usr/libdata/ssh
-ssh
-# ./usr/libdata/ssh
 ..
 
 # ./usr/libdata
@@ -1228,6 +1228,8 @@ i386
 ..
 landisk
 ..
+loongson
+..
 luna88k
 ..
 mac68k
@@ -1298,6 +1300,8 @@ i386
 ..
 landisk
 ..
+loongson
+..
 luna88k
 ..
 mac68k
@@ -1354,6 +1358,8 @@ i386
 ..
 landisk
 ..
+loongson
+..
 luna88k
 ..
 mac68k
@@ -1404,6 +1410,8 @@ hppa64
 i386
 ..
 landisk
+..
+loongson
 ..
 luna88k
 ..
@@ -1466,6 +1474,8 @@ i386
 ..
 landisk
 ..
+loongson
+..
 luna88k
 ..
 mac68k
@@ -1517,6 +1527,8 @@ i386
 ..
 landisk
 ..
+loongson
+..
 luna88k
 ..
 mac68k
@@ -1567,6 +1579,8 @@ hppa64
 i386
 ..
 landisk
+..
+loongson
 ..
 luna88k
 ..
@@ -1640,6 +1654,8 @@ i386
 ..
 landisk
 ..
+loongson
+..
 luna88k
 ..
 mac68k
@@ -1696,6 +1712,8 @@ i386
 ..
 landisk
 ..
+loongson
+..
 luna88k
 ..
 mac68k
@@ -1746,6 +1764,8 @@ hppa64
 i386
 ..
 landisk
+..
+loongson
 ..
 luna88k
 ..
@@ -1808,6 +1828,8 @@ i386
 ..
 landisk
 ..
+loongson
+..
 luna88k
 ..
 mac68k
@@ -1859,6 +1881,8 @@ i386
 ..
 landisk
 ..
+loongson
+..
 luna88k
 ..
 mac68k
@@ -1909,6 +1933,8 @@ hppa64
 i386
 ..
 landisk
+..
+loongson
 ..
 luna88k
 ..
@@ -1976,6 +2002,8 @@ i386
 ..
 landisk
 ..
+loongson
+..
 luna88k
 ..
 mac68k
@@ -2041,6 +2069,8 @@ hppa64
 i386
 ..
 landisk
+..
+loongson
 ..
 luna88k
 ..
