@@ -89,6 +89,7 @@ _DEV(tuner, 75)
 _DEV(vi, 38)
 _DEV(nnpfs, 51)
 _DEV(bthub, 101)
+_DEV(diskmap, 102)
 dnl
 divert(__mddivert)dnl
 dnl
