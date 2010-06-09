@@ -491,8 +491,8 @@ vscsi*)
 diskmap)
 	rm -f diskmap
 	mknod diskmap c 57 0
-	chmod 600 diskmap
-	chown root:wheel diskmap
+	chmod 640 diskmap
+	chown root:operator diskmap
 	;;
 
 altq)
