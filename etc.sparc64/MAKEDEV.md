@@ -1,6 +1,6 @@
 define(MACHINE,sparc64)dnl
 vers(__file__,
-	{-$OpenBSD: MAKEDEV.md,v 1.56 2010/03/30 19:16:09 matthieu Exp $-},
+	{-$OpenBSD: MAKEDEV.md,v 1.57 2010/06/09 16:10:25 todd Exp $-},
 etc.MACHINE)dnl
 dnl
 dnl Copyright (c) 2001-2006 Todd T. Fries <todd@OpenBSD.org>

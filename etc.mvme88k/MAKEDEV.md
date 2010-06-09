@@ -1,6 +1,6 @@
 define(MACHINE,mvme88k)dnl
 vers(__file__,
-	{-$OpenBSD: MAKEDEV.md,v 1.24 2009/08/13 15:12:36 deraadt Exp $-},
+	{-$OpenBSD: MAKEDEV.md,v 1.25 2010/06/09 16:10:25 todd Exp $-},
 etc.MACHINE)dnl
 dnl
 dnl Copyright (c) 2001-2006 Todd T. Fries <todd@OpenBSD.org>
