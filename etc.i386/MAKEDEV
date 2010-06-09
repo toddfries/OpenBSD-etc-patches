@@ -39,7 +39,6 @@
 #	sd*	SCSI disks, including flopticals
 #	vnd*	"file" pseudo-disk devices
 #	wd*	"winchester" disk drives (ST506, IDE, ESDI, RLL, ...)
-#	disk	Disk UID Node
 # Tapes:
 #	ch*	SCSI media changers
 #	st*	SCSI tape drives
@@ -548,10 +547,6 @@ st*)
 
 ch*)
 	M ch$U c 17 $U 660 operator
-	;;
-
-disk)
-	disk
 	;;
 
 vnd*)
