@@ -1,6 +1,6 @@
 define(MACHINE,alpha)dnl
 vers(__file__,
-	{-$OpenBSD: MAKEDEV.md,v 1.46 2010/06/09 16:10:25 todd Exp $-},
+	{-$OpenBSD: MAKEDEV.md,v 1.48 2010/07/03 03:59:15 krw Exp $-},
 etc.MACHINE)dnl
 dnl
 dnl Copyright (c) 2001-2006 Todd T. Fries <todd@OpenBSD.org>
@@ -77,7 +77,6 @@ _DEV(radio, 59)
 _DEV(rmidi, 41)
 _DEV(rnd, 34)
 _DEV(speak, 40)
-_DEV(ss, 32)
 _DEV(systrace, 50)
 _DEV(tun, 7)
 _DEV(tuner, 58)
@@ -92,7 +91,7 @@ divert(__mddivert)dnl
 dnl
 ramdisk)
 	_recurse std fd0 wd0 wd1 wd2 sd0 sd1 sd2 bpf0
-	_recurse st0 cd0 ttyC0 rd0 bio
+	_recurse st0 cd0 ttyC0 rd0 bio diskmap
 	;;
 
 _std(1, 2, 39, 6)
@@ -113,7 +112,6 @@ dnl *** alpha specific targets
 dnl
 target(all, bio)dnl
 target(all, ch, 0)dnl
-target(all, ss, 0, 1)dnl
 target(all, nnpfs, 0)dnl
 target(all, vscsi, 0)dnl
 target(all, diskmap)dnl
