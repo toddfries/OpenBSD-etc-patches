@@ -1,4 +1,4 @@
-#	$OpenBSD: changelist,v 1.66 2010/04/15 20:12:27 sthen Exp $
+#	$OpenBSD: changelist,v 1.69 2010/09/06 17:10:19 naddy Exp $
 #
 # List of files which the security script backs up and checks
 # for modifications.
@@ -45,6 +45,7 @@
 /etc/hosts.equiv
 /etc/hosts.lpd
 /etc/ifstated.conf
++/etc/iked.conf
 /etc/inetd.conf
 +/etc/ipsec.conf
 +/etc/isakmpd/private/local.key
@@ -96,7 +97,6 @@
 /etc/passwd
 /etc/pf.conf
 /etc/pf.os
-/etc/phones
 /etc/portal.conf
 /etc/printcap
 /etc/profile
@@ -129,6 +129,8 @@
 /etc/ssh/ssh_config
 +/etc/ssh/ssh_host_dsa_key
 /etc/ssh/ssh_host_dsa_key.pub
++/etc/ssh/ssh_host_ecdsa_key
+/etc/ssh/ssh_host_ecdsa_key.pub
 +/etc/ssh/ssh_host_key
 /etc/ssh/ssh_host_key.pub
 +/etc/ssh/ssh_host_rsa_key
