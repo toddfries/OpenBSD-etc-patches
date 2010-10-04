@@ -1,4 +1,4 @@
-#	$OpenBSD: rc,v 1.335 2010/01/04 18:03:30 deraadt Exp $
+#	$OpenBSD: rc,v 1.341 2010/09/06 17:10:19 naddy Exp $
 
 # System startup script run by init on autoboot
 # or after single-user.
@@ -372,7 +372,7 @@ if [ X"${named_flags}" != X"NO" ]; then
 fi
 
 if [ ! -f /etc/isakmpd/private/local.key ]; then
-	echo -n "openssl: generating new isakmpd RSA key... "
+	echo -n "openssl: generating new isakmpd/iked RSA key... "
 	if /usr/sbin/openssl genrsa -out /etc/isakmpd/private/local.key 2048 \
 	    > /dev/null 2>&1; then
 		chmod 600 /etc/isakmpd/private/local.key
@@ -384,11 +384,25 @@ if [ ! -f /etc/isakmpd/private/local.key ]; then
 	fi
 fi
 
+if [ ! -f /etc/iked/private/local.key ]; then
+	# Just copy the generated isakmpd key
+	cp /etc/isakmpd/private/local.key /etc/iked/private/local.key
+	chmod 600 /etc/iked/private/local.key
+	cp /etc/isakmpd/local.pub /etc/iked/local.pub
+fi
+
 if [ X"${isakmpd_flags}" != X"NO" ]; then
 	if [ X"${sasyncd_flags}" != X"NO" ]; then
 		isakmpd_flags="-S ${isakmpd_flags}"
 	fi
 	echo 'starting isakmpd';	isakmpd ${isakmpd_flags}
+fi
+
+if [ X"${iked_flags}" != X"NO" ]; then
+	if [ X"${sasyncd_flags}" != X"NO" ]; then
+		iked_flags="-S ${iked_flags}"
+	fi
+	echo 'starting iked';		iked ${iked_flags}
 fi
 
 if [ X"${sasyncd_flags}" != X"NO" ]; then
@@ -520,7 +534,8 @@ echo clearing /tmp
 
 # prune quickly with one rm, then use find to clean up /tmp/[lq]*
 # (not needed with mfs /tmp, but doesn't hurt there...)
-(cd /tmp && rm -rf [a-km-pr-zA-Z]* &&
+(cd /tmp && rm -rf [a-km-pr-zA-Z]*)
+(cd /tmp &&
     find . ! -name . ! -name lost+found ! -name quota.user \
 	! -name quota.group -execdir rm -rf -- {} \; -type d -prune)
 
@@ -592,6 +607,14 @@ if [ ! -f /etc/ssh/ssh_host_dsa_key ]; then
 		echo failed.
 	fi
 fi
+if [ ! -f /etc/ssh/ssh_host_ecdsa_key ]; then
+	echo -n "ssh-keygen: generating new ECDSA host key... "
+	if /usr/bin/ssh-keygen -q -t ecdsa -f /etc/ssh/ssh_host_ecdsa_key -N ''; then
+		echo done.
+	else
+		echo failed.
+	fi
+fi
 if [ ! -f /etc/ssh/ssh_host_rsa_key ]; then
 	echo -n "ssh-keygen: generating new RSA host key... "
 	if /usr/bin/ssh-keygen -q -t rsa -f /etc/ssh/ssh_host_rsa_key -N ''; then
@@ -617,6 +640,10 @@ fi
 
 if [ X"${snmpd_flags}" != X"NO" ]; then
 	echo -n ' snmpd';		/usr/sbin/snmpd $snmpd_flags
+fi
+
+if [ X"${ldpd_flags}" != X"NO" ]; then
+	echo -n ' ldpd';		/usr/sbin/ldpd $ldpd_flags
 fi
 
 if [ X"${ripd_flags}" != X"NO" ]; then
@@ -699,6 +726,10 @@ if [ X"${lpd_flags}" != X"NO" ]; then
 	echo -n ' lpd';			lpd ${lpd_flags}
 fi
 
+if [ X"${ldapd_flags}" != X"NO" ]; then
+	echo -n ' ldapd';		/usr/sbin/ldapd ${ldapd_flags};
+fi
+
 # We call sendmail with a full path so that SIGHUP works.
 # Note that /usr/sbin/sendmail may actually call a
 # mailer other than sendmail, depending on /etc/mailer.conf.
@@ -763,6 +794,10 @@ fi
 echo '.'
 
 mixerctl_conf
+if [ X"${aucat_flags}" != X"NO" ]; then
+	aucat -l ${aucat_flags}
+fi
+
 if [ X"${aucat_flags}" != X"NO" ]; then
 	aucat -l ${aucat_flags}
 fi
