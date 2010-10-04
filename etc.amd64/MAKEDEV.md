@@ -1,6 +1,6 @@
 define(MACHINE,amd64)dnl
 vers(__file__,
-	{-$OpenBSD: MAKEDEV.md,v 1.39 2010/06/09 16:10:25 todd Exp $-},
+	{-$OpenBSD: MAKEDEV.md,v 1.42 2010/09/04 12:18:03 miod Exp $-},
 etc.MACHINE)dnl
 dnl
 dnl Copyright (c) 2001-2006 Todd T. Fries <todd@OpenBSD.org>
@@ -50,8 +50,8 @@ _DEV(ptm, 81)
 _DEV(pty, 6)
 _DEV(tty, 5)
 _TITLE(cons)
-_DEV(wscons)
 _DEV(wsdisp, 12)
+_DEV(wscons)
 _DEV(wskbd, 67)
 _DEV(wsmux, 69)
 _TITLE(point)
@@ -60,8 +60,8 @@ _TITLE(prn)
 _DEV(lpa)
 _DEV(lpt, 16)
 _TITLE(usb)
-_DEV(uall)
 _DEV(ttyU, 66)
+_DEV(uall)
 _DEV(ugen, 63)
 _DEV(uhid, 62)
 _DEV(ulpt, 64)
@@ -77,6 +77,7 @@ _DEV(bktr, 49)
 _DEV(bpf, 23)
 _DEV(bthub, 84)
 _DEV(cry, 70)
+_DEV(diskmap, 90)
 _DEV(drm, 87)
 _DEV(fdesc, 22)
 _DEV(gpio, 88)
@@ -86,28 +87,26 @@ _DEV(iop, 75)
 dnl _DEV(joy, 26)
 _DEV(lkm, 28)
 _DEV(music, 53)
+_DEV(nnpfs, 51)
 _DEV(nvram, 85)
 _DEV(pci, 72)
 _DEV(pctr, 46)
 _DEV(pf, 73)
 _DEV(radio, 76)
-_DEV(rmidi, 52)
 _DEV(rnd, 45)
+_DEV(rmidi, 52)
 _DEV(speak, 27)
-_DEV(ss, 19)
 _DEV(systrace, 78)
 _DEV(tun, 40)
 _DEV(tuner, 49)
 _DEV(uk, 20)
 _DEV(vi, 44)
-_DEV(nnpfs, 51)
 _DEV(vscsi, 89)
-_DEV(diskmap, 90)
 dnl
 divert(__mddivert)dnl
 dnl
 ramdisk)
-	_recurse std bpf0 fd0 wd0 sd0 tty00 tty01 rd0 bio
+	_recurse std bpf0 fd0 wd0 sd0 tty00 tty01 rd0 bio diskmap
 	_recurse st0 cd0 ttyC0 wskbd0 wskbd1 wskbd2
 	;;
 
@@ -123,7 +122,6 @@ dnl
 dnl amd64 specific targets
 dnl
 target(all, ch, 0)dnl
-target(all, ss, 0, 1)dnl
 target(all, nnpfs, 0)dnl
 target(all, vscsi, 0)dnl
 target(all, diskmap)dnl

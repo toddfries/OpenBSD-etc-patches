@@ -1,6 +1,6 @@
 define(MACHINE,macppc)dnl
 vers(__file__,
-	{-$OpenBSD: MAKEDEV.md,v 1.41 2010/06/09 16:10:25 todd Exp $-},
+	{-$OpenBSD: MAKEDEV.md,v 1.44 2010/09/04 12:18:03 miod Exp $-},
 etc.MACHINE)dnl
 dnl
 dnl Copyright (c) 2001-2006 Todd T. Fries <todd@OpenBSD.org>
@@ -52,8 +52,8 @@ _TITLE(tap)
 _DEV(ch, 10)
 _DEV(st, 20, 5)
 _TITLE(term)
-_DEV(com, 26)
 _DEV(s64_czs, 7)
+_DEV(com, 26)
 _DEV(s64_tzs, 7)
 _TITLE(pty)
 _DEV(ptm, 77)
@@ -83,24 +83,23 @@ _DEV(bktr, 75)
 _DEV(bpf, 22)
 _DEV(bthub, 81)
 _DEV(cry, 47)
+_DEV(diskmap, 84)
 _DEV(fdesc, 21)
-_DEV(hotplug, 78)
 _DEV(gpio, 79)
+_DEV(hotplug, 78)
 _DEV(iop, 73)
 _DEV(lkm, 24)
+_DEV(nnpfs, 51)
 _DEV(pci, 71)
 _DEV(pf, 39)
 _DEV(radio, 76)
 _DEV(rnd, 40)
-_DEV(ss, 42)
 _DEV(systrace, 50)
 _DEV(tun, 23)
 _DEV(tuner, 75)
 _DEV(uk, 41)
 _DEV(vi, 45)
-_DEV(nnpfs, 51)
 _DEV(vscsi, 83)
-_DEV(diskmap, 84)
 dnl
 divert(__mddivert)dnl
 dnl
@@ -115,7 +114,6 @@ dnl
 twrget(all, s64_tzs, tty, a, b)dnl
 twrget(all, s64_czs, cua, a, b)dnl
 target(all, ch, 0)dnl
-target(all, ss, 0, 1)dnl
 target(all, nnpfs, 0)dnl
 target(all, vscsi, 0)dnl
 target(all, diskmap)dnl
@@ -137,3 +135,4 @@ target(ramd, ttya, 0, 1)dnl
 target(ramd, ttyb, 0, 1)dnl
 target(ramd, pty, 0)dnl
 target(ramd, bio)dnl
+target(ramd, diskmap)dnl

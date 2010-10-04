@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.289 2010/06/07 10:09:05 reyk Exp $
+#	$OpenBSD: Makefile,v 1.291 2010/09/22 13:01:10 deraadt Exp $
 
 TZDIR=		/usr/share/zoneinfo
 LOCALTIME=	Canada/Mountain
@@ -16,7 +16,7 @@ BINGRP= wheel
 BIN1=	changelist ccd.conf csh.cshrc csh.login csh.logout daily dhcpd.conf \
 	exports ftpusers ftpchroot gettytab group hosts hosts.lpd inetd.conf \
 	ksh.kshrc locate.rc man.conf monthly motd mrouted.conf myname \
-	netstart networks newsyslog.conf phones printcap protocols \
+	netstart networks newsyslog.conf printcap protocols \
 	rbootd.conf rc rc.conf rc.local rc.securelevel rc.shutdown \
 	remote rpc security services shells syslog.conf weekly \
 	etc.${MACHINE}/disktab dhclient.conf mailer.conf ntpd.conf \
@@ -232,8 +232,6 @@ distribution-etc-root-var: distrib-dirs
 	    ${DESTDIR}/var/log/wtmp
 	${INSTALL} -c -o ${BINOWN} -g wheel -m 640 /dev/null \
 	    ${DESTDIR}/var/log/xferlog
-	${INSTALL} -c -o daemon -g staff -m 664 /dev/null \
-	    ${DESTDIR}/var/msgs/bounds
 	${INSTALL} -c -o ${BINOWN} -g utmp -m 664 /dev/null \
 	    ${DESTDIR}/var/run/utmp
 .if ${MACHINE} == "vax"

@@ -1,6 +1,6 @@
 define(MACHINE,sparc)dnl
 vers(__file__,
-	{-$OpenBSD: MAKEDEV.md,v 1.41 2010/06/09 16:10:25 todd Exp $-},
+	{-$OpenBSD: MAKEDEV.md,v 1.44 2010/09/04 12:18:04 miod Exp $-},
 etc.MACHINE)dnl
 dnl
 dnl Copyright (c) 2001-2006 Todd T. Fries <todd@OpenBSD.org>
@@ -72,21 +72,21 @@ _DEV(ch, 19)
 _DEV(st, 18, 11)
 _TITLE(term)
 _DEV(s64_czs, 12)
-_DEV(s64_tzs, 12)
-_DEV(com, 36)
 _DEV(mag, 100)
 _DEV(spif, 102)
+_DEV(com, 36)
+_DEV(s64_tzs, 12)
 _TITLE(pty)
 _DEV(ptm, 125)
 _DEV(pty, 21)
 _DEV(tty, 20)
 _TITLE(prn)
 _DEV(bpp, 104)
-_DEV(bppmag, 101)
 _DEV(bppsp, 103)
+_DEV(bppmag, 101)
 _TITLE(cons)
-_DEV(wscons)
 _DEV(wsdisp, 78)
+_DEV(wscons)
 _DEV(wskbd, 79)
 _DEV(wsmux, 81)
 _TITLE(point)
@@ -96,23 +96,22 @@ _DEV(apm, 30)
 _DEV(au, 69)
 _DEV(bio, 124)
 _DEV(bpf, 105)
+_DEV(diskmap, 129)
 _DEV(fdesc, 24)
 _DEV(lkm, 112)
+_DEV(nnpfs, 51)
 _DEV(oppr)
 _DEV(pf, 59)
 _DEV(rnd, 119)
-_DEV(ss, 121)
 _DEV(systrace, 50)
 _DEV(tun, 111)
 _DEV(uk, 120)
-_DEV(nnpfs, 51)
 _DEV(vscsi, 128)
-_DEV(diskmap, 129)
 dnl
 divert(__mddivert)dnl
 dnl
 ramdisk)
-	_recurse std bpf0 bio
+	_recurse std bpf0 bio diskmap
 	_recurse fd0 sd0 sd1 sd2 rd0 cd0
 	;;
 
@@ -127,7 +126,6 @@ twrget(all, s64_tzs, tty, a, b, c, d)dnl
 twrget(all, s64_czs, cua, a, b, c, d)dnl
 target(all, bio)dnl
 target(all, ch, 0)dnl
-target(all, ss, 0, 1)dnl
 target(all, nnpfs, 0)dnl
 target(all, vscsi, 0)dnl
 target(all, diskmap)dnl

@@ -3,8 +3,8 @@
 # THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
 # generated from:
 #
-#	OpenBSD: etc.sgi/MAKEDEV.md,v 1.28 2010/06/09 16:10:25 todd Exp 
-#	OpenBSD: MAKEDEV.common,v 1.47 2010/06/09 16:10:24 todd Exp 
+#	OpenBSD: etc.sgi/MAKEDEV.md,v 1.30 2010/07/03 03:59:15 krw Exp 
+#	OpenBSD: MAKEDEV.common,v 1.51 2010/08/03 20:12:01 miod Exp 
 #	OpenBSD: MAKEDEV.mi,v 1.79 2009/01/25 17:30:48 miod Exp 
 #	OpenBSD: MAKEDEV.sub,v 1.14 2005/02/07 06:14:18 david Exp 
 #
@@ -46,15 +46,15 @@
 #	pty*	Set of 62 master pseudo terminals
 #	tty*	Set of 62 slave pseudo terminals
 # Console ports:
-#	wscons	Minimal wscons devices
 #	ttyC-J*	wscons display devices
+#	wscons	Minimal wscons devices
 #	wskbd*	wscons keyboards
 #	wsmux	wscons keyboard/mouse mux devices
 # Pointing devices:
 #	wsmouse*	wscons mice
 # USB devices:
-#	uall	All USB devices
 #	ttyU*	USB serial ports
+#	uall	All USB devices
 #	ugen*	Generic USB devices
 #	uhid*	Generic HID devices
 #	ulpt*	Printer devices
@@ -65,19 +65,18 @@
 #	bio	ioctl tunnel pseudo-device
 #	bpf*	Berkeley Packet Filter
 #	crypto	Hardware crypto access driver
+#	diskmap	Disk mapper
 #	fd	fd/* nodes
 #	hotplug	devices hot plugging
+#	nnpfs*	NNPFS filesystem node
 #	pci*	PCI bus devices
 #	pf*	Packet Filter
 #	*random	In-kernel random data source
-#	ss*	SCSI scanners
 #	systrace*	System call tracing device
 #	tun*	Network tunnel driver
 #	uk*	Unknown SCSI devices
 #	video*	Video V4L2 devices
-#	nnpfs*	NNPFS filesystem node
 #	vscsi*	Virtual SCSI controller
-#	diskmap	Disk mapper
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 T=$0
 
@@ -217,16 +216,8 @@ std)
 	M klog		c 6 0 600
 	;;
 
-diskmap)
-	M diskmap b 69 0 640 operator
-	;;
-
 vscsi*)
 	M vscsi$U c 68 $U 600
-	;;
-
-nnpfs*)
-	M nnpfs$U c 51 $U 600
 	;;
 
 video*)
@@ -244,14 +235,6 @@ tun*)
 
 systrace)
 	M systrace c 50 0 644
-	;;
-
-ss*)
-	M ss$U c 34 $(($U*16)) 640 operator
-	M nss$U c 34 $(($(($U*16))+1)) 640 operator
-	M enss$U c 34 $(($(($U*16))+3)) 640 operator
-	RMlist[${#RMlist[*]}]="scan$U"
-	MKlist[${#MKlist[*]}]=";umask 77;ln -s ss$U scan$U"
 	;;
 
 *random)
@@ -272,6 +255,10 @@ pci*)
 	MKlist[${#MKlist[*]}]=";[ -h pci ] || ln -sf pci0 pci"
 	;;
 
+nnpfs*)
+	M nnpfs$U c 51 $U 600
+	;;
+
 hotplug)
 	M hotplug c 67 $U 400
 	;;
@@ -280,6 +267,10 @@ fd)
 	RMlist[${#RMlist[*]}]=";mkdir -p fd;rm -f" n=0
 	while [ $n -lt 64 ];do M fd/$n c 7 $n;n=$(($n+1));done
 	MKlist[${#MKlist[*]}]=";chmod 555 fd"
+	;;
+
+diskmap)
+	M diskmap c 69 0 640 operator
 	;;
 
 crypto)
@@ -330,16 +321,16 @@ ugen*)
 	done
 	;;
 
+uall)
+	R ttyU0 ttyU1 ttyU2 ttyU3 ugen0 ugen1 ulpt0 ulpt1 uhid0 uhid1
+	R uhid2 uhid3 urio0 usb0 usb1 usb2 usb3 usb4 usb5 usb6 usb7
+	;;
+
 ttyU[0-9a-zA-Z])
 	U=${i#ttyU*}
 	o=$(alph2d $U)
 	M ttyU$U c 66 $o 660 dialer uucp
 	M cuaU$U c 66 $(($o+128)) 660 dialer uucp
-	;;
-
-uall)
-	R ttyU0 ttyU1 ttyU2 ttyU3 ugen0 ugen1 ulpt0 ulpt1 uhid0 uhid1
-	R uhid2 uhid3 urio0 usb0 usb1 usb2 usb3 usb4 usb5
 	;;
 
 wsmouse[0-9]*)
@@ -353,6 +344,16 @@ wsmux|wsmouse|wskbd)
 
 wskbd[0-9]*)
 	M wskbd$U c 26 $U 600
+	;;
+
+wscons)
+	R wsmouse0 wsmouse1 wsmouse2 wsmouse3 wskbd0 wskbd1 wskbd2
+	R wskbd3 wsmux ttyFcfg ttyF0 ttyF1 ttyF2 ttyF3 ttyF4 ttyF5
+	R ttyF6 ttyF7 ttyF8 ttyF9 ttyFa ttyFb ttyEcfg ttyE0 ttyE1
+	R ttyE2 ttyE3 ttyE4 ttyE5 ttyE6 ttyE7 ttyE8 ttyE9 ttyEa ttyEb
+	R ttyDcfg ttyD0 ttyD1 ttyD2 ttyD3 ttyD4 ttyD5 ttyD6 ttyD7
+	R ttyD8 ttyD9 ttyDa ttyDb ttyCcfg ttyC0 ttyC1 ttyC2 ttyC3
+	R ttyC4 ttyC5 ttyC6 ttyC7 ttyC8 ttyC9 ttyCa ttyCb
 	;;
 
 tty[C-J]*)
@@ -372,16 +373,6 @@ tty[C-J]*)
 	cfg) M tty${n}cfg c 25 $((255+$m)) 600;;
 	*) echo bad unit $U for $i; exit 1;;
 	esac
-	;;
-
-wscons)
-	R wsmouse0 wsmouse1 wsmouse2 wsmouse3 wskbd0 wskbd1 wskbd2
-	R wskbd3 wsmux ttyFcfg ttyF0 ttyF1 ttyF2 ttyF3 ttyF4 ttyF5
-	R ttyF6 ttyF7 ttyF8 ttyF9 ttyFa ttyFb ttyEcfg ttyE0 ttyE1
-	R ttyE2 ttyE3 ttyE4 ttyE5 ttyE6 ttyE7 ttyE8 ttyE9 ttyEa ttyEb
-	R ttyDcfg ttyD0 ttyD1 ttyD2 ttyD3 ttyD4 ttyD5 ttyD6 ttyD7
-	R ttyD8 ttyD9 ttyDa ttyDb ttyCcfg ttyC0 ttyC1 ttyC2 ttyC3
-	R ttyC4 ttyC5 ttyC6 ttyC7 ttyC8 ttyC9 ttyCa ttyCb
 	;;
 
 pty*)
@@ -449,18 +440,18 @@ local)
 	;;
 
 ramdisk)
-	R bio pty0 rd0 cd0 cd1 st0 st1 wd0 wd1 wd2 wd3 wd4 sd0 sd1
-	R sd2 sd3 sd4 tty00 tty01 bpf0 std
+	R diskmap bio pty0 rd0 cd0 cd1 st0 st1 wd0 wd1 wd2 wd3 wd4
+	R sd0 sd1 sd2 sd3 sd4 tty00 tty01 bpf0 std
 	;;
 
 all)
 	R ccd0 ccd1 ccd2 ccd3 vnd0 vnd1 vnd2 vnd3 sd0 sd1 sd2 sd3 sd4
 	R sd5 sd6 sd7 sd8 sd9 cd0 cd1 rd0 tun0 tun1 tun2 tun3 bio bpf0
 	R bpf1 bpf2 bpf3 bpf4 bpf5 bpf6 bpf7 bpf8 bpf9 pty0 pty1 pty2
-	R diskmap vscsi0 nnpfs0 ss0 ss1 ch0 hotplug ptm local wscons
-	R pci0 pci1 pci2 pci3 uall video0 audio0 audio1 audio2 uk0
-	R random tty00 tty01 tty02 tty03 crypto pf systrace wd0 wd1
-	R wd2 wd3 std st0 st1 fd
+	R diskmap vscsi0 nnpfs0 ch0 hotplug ptm local wscons pci0 pci1
+	R pci2 pci3 uall video0 video1 audio0 audio1 audio2 uk0 random
+	R tty00 tty01 tty02 tty03 crypto pf systrace wd0 wd1 wd2 wd3
+	R std st0 st1 fd
 	;;
 
 wd*|sd*|ccd*)

@@ -1,6 +1,6 @@
 define(MACHINE,loongson)dnl
 vers(__file__,
-	{-$OpenBSD: MAKEDEV.md,v 1.5 2010/06/09 16:10:25 todd Exp $-},
+	{-$OpenBSD: MAKEDEV.md,v 1.8 2010/09/04 12:18:03 miod Exp $-},
 etc.MACHINE)dnl
 dnl
 dnl Copyright (c) 2001-2006 Todd T. Fries <todd@OpenBSD.org>
@@ -49,15 +49,15 @@ _DEV(ptm, 52)
 _DEV(pty, 5)
 _DEV(tty, 4)
 _TITLE(cons)
-_DEV(wscons)
 _DEV(wsdisp, 25)
+_DEV(wscons)
 _DEV(wskbd, 26)
 _DEV(wsmux, 28)
 _TITLE(point)
 _DEV(wsmouse, 27)
 _TITLE(usb)
-_DEV(uall)
 _DEV(ttyU, 66)
+_DEV(uall)
 _DEV(ugen, 63)
 _DEV(uhid, 62)
 _DEV(ulpt, 64)
@@ -68,22 +68,21 @@ _DEV(apm, 14)
 _DEV(au, 44)
 _DEV(bio, 49)
 _DEV(bpf, 12)
+_DEV(bthub, 68)
 _DEV(cry, 47)
+_DEV(diskmap, 70)
 _DEV(fdesc, 7)
 _DEV(hotplug, 67)
 dnl _DEV(lkm)
+_DEV(nnpfs, 51)
 _DEV(pci, 29)
 _DEV(pf, 31)
 _DEV(rnd, 33)
-_DEV(ss, 34)
 _DEV(systrace, 50)
 _DEV(tun, 13)
 _DEV(uk, 32)
 _DEV(vi, 45)
-_DEV(nnpfs, 51)
-_DEV(bthub, 68)
 _DEV(vscsi, 69)
-_DEV(diskmap, 70)
 dnl
 divert(__mddivert)dnl
 dnl
@@ -93,7 +92,6 @@ dnl
 dnl *** loongson specific targets
 dnl
 dnl target(all, ch, 0)dnl
-dnl target(all, ss, 0, 1)dnl
 target(all, nnpfs, 0)dnl
 target(all, vscsi, 0)dnl
 target(all, diskmap)dnl
@@ -112,3 +110,4 @@ target(all, ccd, 0, 1, 2, 3)dnl
 target(all, bthub, 0, 1, 2)dnl
 target(ramd, pty, 0)dnl
 target(ramd, bio)dnl
+target(ramd, diskmap)dnl

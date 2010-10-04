@@ -1,6 +1,6 @@
 define(MACHINE,alpha)dnl
 vers(__file__,
-	{-$OpenBSD: MAKEDEV.md,v 1.46 2010/06/09 16:10:25 todd Exp $-},
+	{-$OpenBSD: MAKEDEV.md,v 1.49 2010/09/04 12:18:03 miod Exp $-},
 etc.MACHINE)dnl
 dnl
 dnl Copyright (c) 2001-2006 Todd T. Fries <todd@OpenBSD.org>
@@ -44,8 +44,8 @@ _DEV(ptm, 55)
 _DEV(pty, 5)
 _DEV(tty, 4)
 _TITLE(cons)
-_DEV(wscons)
 _DEV(wsdisp, 25)
+_DEV(wscons)
 _DEV(wskbd, 29)
 _DEV(wsmux, 60)
 _TITLE(point)
@@ -54,8 +54,8 @@ _TITLE(prn)
 _DEV(lpa)
 _DEV(lpt, 31)
 _TITLE(usb)
-_DEV(uall)
 _DEV(ttyU, 49)
+_DEV(uall)
 _DEV(ugen, 48)
 _DEV(uhid, 46)
 _DEV(ulpt, 47)
@@ -65,34 +65,33 @@ _DEV(au, 24)
 _DEV(bio, 53)
 _DEV(bktr, 58)
 _DEV(bpf, 11)
+_DEV(bthub, 62)
 _DEV(cry, 57)
+_DEV(diskmap, 63)
 _DEV(fdesc, 10)
 _DEV(hotplug, 56)
 _DEV(iop, 54)
 _DEV(lkm, 16)
 _DEV(music, 42)
+_DEV(nnpfs, 51)
 _DEV(pci, 52)
 _DEV(pf, 35)
 _DEV(radio, 59)
-_DEV(rmidi, 41)
 _DEV(rnd, 34)
+_DEV(rmidi, 41)
 _DEV(speak, 40)
-_DEV(ss, 32)
 _DEV(systrace, 50)
 _DEV(tun, 7)
 _DEV(tuner, 58)
 _DEV(uk, 33)
 _DEV(vi, 44)
-_DEV(nnpfs, 51)
 _DEV(vscsi, 61)
-_DEV(bthub, 62)
-_DEV(diskmap, 63)
 dnl
 divert(__mddivert)dnl
 dnl
 ramdisk)
 	_recurse std fd0 wd0 wd1 wd2 sd0 sd1 sd2 bpf0
-	_recurse st0 cd0 ttyC0 rd0 bio
+	_recurse st0 cd0 ttyC0 rd0 bio diskmap
 	;;
 
 _std(1, 2, 39, 6)
@@ -113,7 +112,6 @@ dnl *** alpha specific targets
 dnl
 target(all, bio)dnl
 target(all, ch, 0)dnl
-target(all, ss, 0, 1)dnl
 target(all, nnpfs, 0)dnl
 target(all, vscsi, 0)dnl
 target(all, diskmap)dnl

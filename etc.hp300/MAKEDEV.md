@@ -1,6 +1,6 @@
 define(MACHINE,hp300)dnl
 vers(__file__,
-	{-$OpenBSD: MAKEDEV.md,v 1.37 2010/06/09 16:10:25 todd Exp $-},
+	{-$OpenBSD: MAKEDEV.md,v 1.40 2010/09/04 12:18:03 miod Exp $-},
 etc.MACHINE)dnl
 dnl
 dnl Copyright (c) 2001-2006 Todd T. Fries <todd@OpenBSD.org>
@@ -71,8 +71,8 @@ _DEV(ptm, 52)
 _DEV(pty, 5)
 _DEV(tty, 4)
 _TITLE(cons)
-_DEV(wscons)
 _DEV(wsdisp, 40)
+_DEV(wscons)
 _DEV(wskbd, 41)
 _DEV(wsmux, 43)
 _TITLE(point)
@@ -82,24 +82,23 @@ _DEV(ppi, 11)
 _TITLE(spec)
 _DEV(bio, 49)
 _DEV(bpf, 22)
+_DEV(diskmap, 54)
 _DEV(fdesc, 21)
 _DEV(lkm, 24)
+_DEV(nnpfs, 51)
 _DEV(pf, 33)
 _DEV(rnd, 32)
-_DEV(ss, 38)
 _DEV(systrace, 50)
 _DEV(tun, 23)
 _DEV(uk, 37)
-_DEV(nnpfs, 51)
 _DEV(vscsi, 53)
-_DEV(diskmap, 54)
 dnl
 divert(__mddivert)dnl
 dnl
 ramdisk)
 	_recurse std ct0 ct1 st0 st1 hd0 hd1 hd2 hd3 hd4
 	_recurse sd0 sd1 sd2 sd3 sd4 cd0 cd1 rd0 pty0
-	_recurse apci0 dca0 dcm0 dcm1 bio
+	_recurse apci0 dca0 dcm0 dcm1 bio diskmap
 	_recurse bpf0 bpf1 tun0 tun1 lkm
 	;;
 
@@ -168,7 +167,6 @@ ppi*)
 
 dnl
 target(all, ch, 0)dnl
-target(all, ss, 0)dnl
 target(all, nnpfs, 0)dnl
 target(all, vscsi, 0)dnl
 target(all, diskmap)dnl

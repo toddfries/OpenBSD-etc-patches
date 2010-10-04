@@ -3,8 +3,8 @@
 # THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
 # generated from:
 #
-#	OpenBSD: etc.luna88k/MAKEDEV.md,v 1.13 2010/06/09 16:10:25 todd Exp 
-#	OpenBSD: MAKEDEV.common,v 1.47 2010/06/09 16:10:24 todd Exp 
+#	OpenBSD: etc.luna88k/MAKEDEV.md,v 1.15 2010/07/03 03:59:15 krw Exp 
+#	OpenBSD: MAKEDEV.common,v 1.51 2010/08/03 20:12:01 miod Exp 
 #	OpenBSD: MAKEDEV.mi,v 1.79 2009/01/25 17:30:48 miod Exp 
 #	OpenBSD: MAKEDEV.sub,v 1.14 2005/02/07 06:14:18 david Exp 
 #
@@ -45,8 +45,8 @@
 #	pty*	Set of 62 master pseudo terminals
 #	tty*	Set of 62 slave pseudo terminals
 # Console ports:
-#	wscons	Minimal wscons devices
 #	ttyC-J*	wscons display devices
+#	wscons	Minimal wscons devices
 #	wskbd*	wscons keyboards
 #	wsmux	wscons keyboard/mouse mux devices
 # Pointing devices:
@@ -54,18 +54,17 @@
 # Special purpose devices:
 #	bio	ioctl tunnel pseudo-device
 #	bpf*	Berkeley Packet Filter
+#	diskmap	Disk mapper
 #	fd	fd/* nodes
 #	lcd	front panel LCD display
 #	lkm	Loadable kernel modules interface
+#	nnpfs*	NNPFS filesystem node
 #	pf*	Packet Filter
 #	*random	In-kernel random data source
-#	ss*	SCSI scanners
 #	systrace*	System call tracing device
 #	tun*	Network tunnel driver
 #	uk*	Unknown SCSI devices
-#	nnpfs*	NNPFS filesystem node
 #	vscsi*	Virtual SCSI controller
-#	diskmap	Disk mapper
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 T=$0
 
@@ -206,16 +205,8 @@ std)
 	;;
 
 
-diskmap)
-	M diskmap b 54 0 640 operator
-	;;
-
 vscsi*)
 	M vscsi$U c 53 $U 600
-	;;
-
-nnpfs*)
-	M nnpfs$U c 51 $U 600
 	;;
 
 uk*)
@@ -228,14 +219,6 @@ tun*)
 
 systrace)
 	M systrace c 50 0 644
-	;;
-
-ss*)
-	M ss$U c 42 $(($U*16)) 640 operator
-	M nss$U c 42 $(($(($U*16))+1)) 640 operator
-	M enss$U c 42 $(($(($U*16))+3)) 640 operator
-	RMlist[${#RMlist[*]}]="scan$U"
-	MKlist[${#MKlist[*]}]=";umask 77;ln -s ss$U scan$U"
 	;;
 
 *random)
@@ -251,6 +234,10 @@ pf*)
 	M pf c 39 0 600
 	;;
 
+nnpfs*)
+	M nnpfs$U c 51 $U 600
+	;;
+
 lkm)
 	M lkm c 24 0 640 _lkm
 	;;
@@ -263,6 +250,10 @@ fd)
 	RMlist[${#RMlist[*]}]=";mkdir -p fd;rm -f" n=0
 	while [ $n -lt 64 ];do M fd/$n c 21 $n;n=$(($n+1));done
 	MKlist[${#MKlist[*]}]=";chmod 555 fd"
+	;;
+
+diskmap)
+	M diskmap c 54 0 640 operator
 	;;
 
 bpf*)
@@ -286,6 +277,12 @@ wskbd[0-9]*)
 	M wskbd$U c 14 $U 600
 	;;
 
+wscons)
+	R wsmouse0 wsmouse1 wsmouse2 wsmouse3 wskbd0 wskbd1 wskbd2
+	R wskbd3 wsmux ttyCcfg ttyC0 ttyC1 ttyC2 ttyC3 ttyC4 ttyC5
+	R ttyC6 ttyC7 ttyC8 ttyC9 ttyCa ttyCb
+	;;
+
 tty[C-J]*)
 	U=${i##tty[C-J]}
 	case $i in
@@ -303,12 +300,6 @@ tty[C-J]*)
 	cfg) M tty${n}cfg c 13 $((255+$m)) 600;;
 	*) echo bad unit $U for $i; exit 1;;
 	esac
-	;;
-
-wscons)
-	R wsmouse0 wsmouse1 wsmouse2 wsmouse3 wskbd0 wskbd1 wskbd2
-	R wskbd3 wsmux ttyCcfg ttyC0 ttyC1 ttyC2 ttyC3 ttyC4 ttyC5
-	R ttyC6 ttyC7 ttyC8 ttyC9 ttyCa ttyCb
 	;;
 
 pty*)
@@ -374,16 +365,16 @@ local)
 	;;
 
 ramdisk)
-	R bio pty0 ttya rd0 cd0 cd1 st0 st1 sd0 sd1 sd2 sd3 sd4 bpf0
-	R std
+	R diskmap bio pty0 ttya rd0 cd0 cd1 st0 st1 sd0 sd1 sd2 sd3
+	R sd4 bpf0 std
 	;;
 
 all)
 	R lcd ttya ccd0 ccd1 ccd2 ccd3 vnd0 vnd1 vnd2 vnd3 sd0 sd1
 	R sd2 sd3 sd4 cd0 cd1 rd0 tun0 tun1 tun2 tun3 bio bpf0 bpf1
 	R bpf2 bpf3 bpf4 bpf5 bpf6 bpf7 bpf8 bpf9 pty0 diskmap vscsi0
-	R nnpfs0 ss0 ch0 ptm local wscons uk0 random lkm pf systrace
-	R std st0 st1 fd
+	R nnpfs0 ch0 ptm local wscons uk0 random lkm pf systrace std
+	R st0 st1 fd
 	;;
 
 sd*|ccd*)
