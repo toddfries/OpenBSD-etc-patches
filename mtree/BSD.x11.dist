@@ -1,4 +1,4 @@
-#	$OpenBSD: BSD.x11.dist,v 1.7 2009/11/06 19:25:45 ajacoutot Exp $
+#	$OpenBSD: BSD.x11.dist,v 1.13 2010/06/01 19:59:37 matthieu Exp $
 
 /set type=dir uname=root gname=wheel mode=0755
 .
@@ -105,10 +105,6 @@
                     Xft
                     ..
                     Xmu
-                    ..
-                    XprintAppUtil
-                    ..
-                    XprintUtil
                     ..
                     Xtrans
                     ..
@@ -362,14 +358,28 @@
                     ..
 		    dri2proto
 		    ..
+		    fixesproto
+		    ..
                     fontconfig
                         fontconfig-devel
                         ..
                     ..
+		    inputproto
+		    ..
+		    libXaw
+		    ..
+		    libXrender
+		    ..
+		    libXvMC
+		    ..
                     randrproto
                     ..
                     renderproto
                     ..
+		    xextproto
+		    ..
+		    xtrans
+		    ..
                 ..
                 mk
                 ..
@@ -390,6 +400,8 @@
             ..
         ..
         db
+            sysmerge
+            ..
             xkb
             ..
         ..
