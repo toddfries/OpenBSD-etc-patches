@@ -1,4 +1,4 @@
-# $OpenBSD: pf.os,v 1.23 2010/10/04 09:12:48 claudio Exp $
+# $OpenBSD: pf.os,v 1.25 2010/10/18 15:55:27 deraadt Exp $
 # passive OS fingerprinting
 # -------------------------
 #
