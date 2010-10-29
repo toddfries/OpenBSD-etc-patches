@@ -1,3 +1,5 @@
+#	$OpenBSD: rc.subr,v 1.8 2010/10/28 21:36:45 robert Exp $
+
 [ -z "${local_rcconf}" ] && . /etc/rc.conf
 
 rc_err() {
@@ -24,8 +26,13 @@ rc_stop() {
 }
 
 rc_cmd() {
-	[ `id -u` -eq 0 -o X"$1" = "Xcheck" ] || rc_err "$0: need root privileges"
+	_name=`basename $0`
+	eval _rcflags=\${${_name}_flags}
+
+	[ `id -u` -eq 0 -o X"$1" = "Xcheck" ] || \
+		rc_err "$0: need root privileges"
 	[ -n "${daemon}"  ] || rc_err "$0: daemon is not set"
+	[ -n "${_rcflags}" ] && daemon_flags=${_rcflags}
 	[ -n "${pexp}"    ] || pexp="${daemon}${daemon_flags:+ ${daemon_flags}}"
 
 	case "$1" in
