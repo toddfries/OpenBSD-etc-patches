@@ -1,4 +1,4 @@
-#	$OpenBSD: rc.subr,v 1.8 2010/10/28 21:36:45 robert Exp $
+#	$OpenBSD: rc.subr,v 1.14 2010/12/13 16:06:45 ajacoutot Exp $
 
 [ -z "${local_rcconf}" ] && . /etc/rc.conf
 
@@ -9,7 +9,8 @@ rc_err() {
 
 rc_start() {
 	type rc_pre >/dev/null && rc_pre
-	${daemon} ${daemon_flags} >/dev/null
+	su -l -c ${daemon_class:-daemon} -s ${daemon_shell:-/bin/sh} \
+		${daemon_user:-root} -c "${daemon} ${daemon_flags}" >/dev/null
 }
 
 rc_check() {
@@ -27,13 +28,24 @@ rc_stop() {
 
 rc_cmd() {
 	_name=`basename $0`
-	eval _rcflags=\${${_name}_flags}
 
+	eval _enotsup=\${rc_${1}}
+	eval _rcflags=\${${_name}_flags}
+	eval _rcuser=\${${_name}_user}
+	eval _rcclass=\${${_name}_class}
+	eval _rcshell=\${${_name}_shell}
+
+	[ X"${_enotsup}" != X"NO" ] || rc_err "$0: $1 is not supported"
 	[ `id -u` -eq 0 -o X"$1" = "Xcheck" ] || \
 		rc_err "$0: need root privileges"
-	[ -n "${daemon}"  ] || rc_err "$0: daemon is not set"
+	[ -n "${daemon}"   ] || rc_err "$0: daemon is not set"
 	[ -n "${_rcflags}" ] && daemon_flags=${_rcflags}
-	[ -n "${pexp}"    ] || pexp="${daemon}${daemon_flags:+ ${daemon_flags}}"
+	[ -n "${_rcflags}" ] && daemon_flags=`echo ${_rcflags} | tr -s "[:space:]"`
+	[ -n "${_rcuser}"  ] && daemon_user=${_rcuser}
+	[ -n "${_rcclass}" ] && daemon_class=${_rcclass}
+	[ -n "${_rcshell}" ] && daemon_shell=${_rcshell}
+	[ -n "${pexp}"     ] || \
+		pexp="${daemon}${daemon_flags:+ ${daemon_flags}}"
 
 	case "$1" in
 	check)
