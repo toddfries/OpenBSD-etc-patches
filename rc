@@ -798,9 +798,6 @@ fi
 echo '.'
 
 mixerctl_conf
-if [ X"${aucat_flags}" != X"NO" ]; then
-	aucat -l ${aucat_flags}
-fi
 
 if [ X"${aucat_flags}" != X"NO" ]; then
 	aucat -l ${aucat_flags}
