@@ -178,7 +178,7 @@ ifstart() {
 				[ "$alias" ] && rtcmd=";route -qn add -host $name 127.0.0.1"
 				;;
 			inet6)
-				if [ ! -n "$name" ]; then
+				if ! [ "$name" ]; then
 					echo "/etc/hostname.$if: inet6 alone is invalid"
 					return
 				fi
