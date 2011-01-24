@@ -1,4 +1,4 @@
-#	$OpenBSD: rc,v 1.342 2010/10/01 20:51:32 jakob Exp $
+#	$OpenBSD: rc,v 1.345 2010/11/08 19:44:36 ajacoutot Exp $
 
 # System startup script run by init on autoboot
 # or after single-user.
@@ -157,6 +157,9 @@ HOME=/; export HOME
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
 export PATH
 
+# pick up option configuration
+. /etc/rc.conf
+
 if [ X"$1" = X"shutdown" ]; then
 	dd if=/dev/urandom of=/var/db/host.random bs=1024 count=64 >/dev/null 2>&1
 	chmod 600 /var/db/host.random >/dev/null 2>&1
@@ -243,9 +246,6 @@ mount -uw /		# root on nfs requires this, others aren't hurt
 rm -f /fastboot		# XXX (root now writeable)
 
 random_seed
-
-# pick up option configuration
-. /etc/rc.conf
 
 # set flags on ttys.  (do early, in case they use tty for SLIP in netstart)
 echo 'setting tty flags'
@@ -643,7 +643,7 @@ fi
 echo -n starting network daemons:
 
 if [ X"${sshd_flags}" != X"NO" ]; then
-	echo -n ' sshd';		/usr/sbin/sshd ${sshd_flags};
+	echo -n ' sshd';		/usr/sbin/sshd ${sshd_flags}
 fi
 
 if [ X"${snmpd_flags}" != X"NO" ]; then
@@ -710,7 +710,7 @@ if ifconfig lo0 inet6 >/dev/null 2>&1; then
 fi
 
 if [ X"${hostapd_flags}" != X"NO" ]; then
-	echo -n ' hostapd';		/usr/sbin/hostapd ${hostapd_flags};
+	echo -n ' hostapd';		/usr/sbin/hostapd ${hostapd_flags}
 fi
 
 if [ X"${bt}" != X"NO" ]; then
@@ -730,7 +730,7 @@ if [ X"${lpd_flags}" != X"NO" ]; then
 fi
 
 if [ X"${ldapd_flags}" != X"NO" ]; then
-	echo -n ' ldapd';		/usr/sbin/ldapd ${ldapd_flags};
+	echo -n ' ldapd';		/usr/sbin/ldapd ${ldapd_flags}
 fi
 
 # We call sendmail with a full path so that SIGHUP works.
@@ -820,7 +820,7 @@ fi
 # If rc.firstime exists, run it just once, and make sure it is deleted
 if [ -f /etc/rc.firsttime ]; then
 	mv /etc/rc.firsttime /etc/rc.firsttime.run
-	. /etc/rc.firsttime.run 2>&1 | mail -s 'rc.firsttime output' root
+	. /etc/rc.firsttime.run 2>&1 | mail -s 'rc.firsttime output' root >/dev/null
 fi
 rm -f /etc/rc.firsttime.run
 
