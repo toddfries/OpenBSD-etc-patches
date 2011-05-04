@@ -677,7 +677,12 @@ fi
 
 if ifconfig lo0 inet6 >/dev/null 2>&1; then
 	fw=`sysctl -n net.inet6.ip6.forwarding`
-	if [ X"${fw}" = X"1" ]; then
+	if [ X"${fw}" = X"0" ]; then
+		if [ X"${rtsold_flags}" != X"NO" ]; then
+			echo -n ' rtsold'
+			/usr/sbin/rtsold ${rtsold_flags}
+		fi
+	else
 		if [ X"${route6d_flags}" != X"NO" ]; then
 			echo -n ' route6d'
 			/usr/sbin/route6d ${route6d_flags}
