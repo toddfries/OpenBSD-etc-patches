@@ -90,8 +90,8 @@ ifstart() {
 			dhcpif="$dhcpif $if"
 			;;
 		"rtsol")
-			cmd="ifconfig $if $name rtsol $mask $bcaddr $ext1 $ext2 up"
 			rtsolif="$rtsolif $if"
+			cmd="ifconfig $if $name $mask $bcaddr $ext1 $ext2 up"
 			;;
 		*)
 			read dt dtaddr
@@ -272,7 +272,7 @@ if [ "$ip6kernel" = "YES" -a "x$rtsolif" != "x" ]; then
 	ra=`sysctl -n net.inet6.ip6.accept_rtadv`
 	if [ "x$fw" = "x0" -a "x$ra" = "x1" ]; then
 		echo "IPv6 autoconf:$rtsolif"
-		rtsol
+		rtsol $rtsolif
 	else
 		echo "WARNING: inconsistent config - check /etc/sysctl.conf for IPv6 autoconf"
 	fi
