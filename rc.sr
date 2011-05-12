@@ -2,6 +2,8 @@
 
 . /etc/rc.conf
 
+verbose=0
+
 # conditional sh based grep
 if ! [ -x /usr/bin/grep ]; then
 	grep() {
@@ -38,6 +40,9 @@ grepstart() {
 }
 
 log() {
+	if [ verbose -lt 1 ]; then
+		return
+	fi
 	if [ "$1" = "-n" ]; then
 		shift
 		echo -n "$DUID: $@"
@@ -83,11 +88,11 @@ handle_duid() {
 			log -n "duid $d "
 			if ! duidexists "$d"
 			then
-				echo missing
+				log missing
 				allexist=0
 				missing="$missing $d"
 			else
-				echo present
+				log present
 			fi
 		done
 		if [ allexist -eq 1 ]; then
@@ -144,22 +149,28 @@ handle_attach() {
 		ffs)
      			if [ "$(mount | grep " $mtpt ")" ]; then
 				echo "$mtpt already mounted"
-				case "$mtpt" in
+				#case "$mtpt" in
 				#/home)
 				#	vnconfig svnd0 ~todd/copy/extent0
 				#	(sh /etc/hotplug/attach 2 svnd0 &)
 				#;;
-				#/chr)
-				#	mount -t nnpfs /dev/nnpfs0 /chr/afs
-				#;;
-				/cache)
-					pkill afsd
-					while pgrep afsd; do sleep 1; pkill afsd; done
-					/usr/libexec/afsd $afsd_flags
-				;;
-				esac
+				#esac
 				continue
      			fi
+			case "$mtpt" in
+			/var/spool/afs)
+				pkill afsd
+				while pgrep afsd; do sleep 1; pkill afsd; done
+				rm -rf /var/spool/afs/*
+				echo "found $mtpt dev=/dev/r$DEVNAME$part"
+				umount -f /var/spool/afs && \
+				rm -rf /var/spool/afs/*
+				newfs -O2 -m 0 -i 73777 /dev/r$DEVNAME$part
+				mount /var/spool/afs
+				/usr/libexec/afsd $afsd_flags
+				continue
+			;;
+			esac
 			echo "fsck -y $mtpt && mount $mtpt"
 			if time fsck -y $mtpt; then
 				[ -d "$mtpt" ] || continue
