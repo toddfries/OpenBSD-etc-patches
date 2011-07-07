@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.297 2011/07/06 18:55:36 robert Exp $
+#	$OpenBSD: Makefile,v 1.299 2011/07/07 02:22:11 ajacoutot Exp $
 
 TZDIR=		/usr/share/zoneinfo
 LOCALTIME=	Canada/Mountain
@@ -33,9 +33,10 @@ BIN2=	motd
 # -r-xr-xr-x
 RCDAEMONS=	apmd bgpd bootparamd cron dhcpd dhcrelay dvmrpd ftpd ftpproxy \
 		hostapd hotplugd httpd identd ifstated iked inetd isakmpd ldapd \
-		ldattach ldpd lpd mopd mrouted named nsd ntpd rarpd rbootd relayd \
-		ripd route6d rtadvd rtsold rwhod sasyncd sendmail sensorsd smtpd \
-		snmpd sshd syslogd timed watchdogd
+		ldattach ldpd lpd mopd mrouted named nsd ntpd portmap rarpd \
+		rbootd relayd  ripd route6d rtadvd rtsold rwhod sasyncd sendmail \
+		sensorsd smtpd snmpd sshd syslogd timed watchdogd ypbind ypldap \
+		yppasswdd ypserv
 
 MISETS=	base${OSrev}.tgz comp${OSrev}.tgz \
 	man${OSrev}.tgz game${OSrev}.tgz etc${OSrev}.tgz
@@ -108,6 +109,7 @@ distribution-etc-root-var: distrib-dirs
 	${INSTALL} -c -o root -g wheel -m 600 sasyncd.conf ${DESTDIR}/etc
 	${INSTALL} -c -o root -g wheel -m 600 snmpd.conf ${DESTDIR}/etc
 	${INSTALL} -c -o root -g wheel -m 600 ldapd.conf ${DESTDIR}/etc
+	${INSTALL} -c -o root -g wheel -m 600 ypldap.conf ${DESTDIR}/etc
 	${INSTALL} -c -o root -g _nsd -m 640 nsd.conf ${DESTDIR}/etc
 	${INSTALL} -c -o ${BINOWN} -g ${BINGRP} -m 555 \
 	    etc.${MACHINE}/MAKEDEV ${DESTDIR}/dev
