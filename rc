@@ -1,4 +1,4 @@
-#	$OpenBSD: rc,v 1.354 2011/07/07 02:16:58 robert Exp $
+#	$OpenBSD: rc,v 1.384 2011/07/09 01:30:27 halex Exp $
 
 # System startup script run by init on autoboot
 # or after single-user.
@@ -94,7 +94,7 @@ wsconsctl_conf()
 	set -- `stripcom /etc/wsconsctl.conf`
 	IFS="$save_IFS"
 	while [ $# -ge 1 ] ; do
-		eval /sbin/wsconsctl $1
+		eval wsconsctl $1
 		shift
 	done
 }
@@ -153,6 +153,69 @@ start_daemon()
 	done
 }
 
+make_keys()
+{
+	if [ X"${named_flags}" != X"NO" ]; then
+		if ! cmp -s /etc/rndc.key /var/named/etc/rndc.key ; then
+			echo -n "rndc-confgen: generating shared secret... "
+			if rndc-confgen -a -t /var/named >/dev/null 2>&1; then
+				chmod 0640 /var/named/etc/rndc.key \
+				    >/dev/null 2>&1
+				echo done.
+			else
+				echo failed.
+			fi
+		fi
+	fi
+
+	if [ ! -f /etc/isakmpd/private/local.key ]; then
+		echo -n "openssl: generating isakmpd/iked RSA key... "
+		if openssl genrsa -out /etc/isakmpd/private/local.key 2048 \
+		    >/dev/null 2>&1; then
+			chmod 600 /etc/isakmpd/private/local.key
+			openssl rsa -out /etc/isakmpd/local.pub -in \
+			    /etc/isakmpd/private/local.key -pubout \
+			    >/dev/null 2>&1
+			echo done.
+		else
+			echo failed.
+		fi
+	fi
+
+	if [ ! -f /etc/iked/private/local.key ]; then
+		# Just copy the generated isakmpd key
+		cp /etc/isakmpd/private/local.key /etc/iked/private/local.key
+		chmod 600 /etc/iked/private/local.key
+		cp /etc/isakmpd/local.pub /etc/iked/local.pub
+	fi
+
+	ssh-keygen -A
+}
+
+# create Unix sockets directories for X if needed and make sure they have
+# correct permissions
+setup_X_sockets()
+{
+	if [ -d /usr/X11R6/lib ]; then
+		for d in /tmp/.X11-unix /tmp/.ICE-unix ; do
+			if [ -d $d ]; then
+				if [ `ls -ld $d | cut -d' ' -f4` \
+				    != root ]; then
+					chown root $d
+				fi
+				if [ `ls -ld $d | cut -d' ' -f1` \
+				    != drwxrwxrwt ]; then
+					chmod 1777 $d
+				fi
+			elif [ -e $d ]; then
+				echo "Error: $d exists and isn't a directory."
+			else
+				mkdir -m 1777 $d
+			fi
+		done
+	fi
+}
+
 # End subroutines
 
 stty status '^T'
@@ -174,11 +237,11 @@ if [ X"$1" = X"shutdown" ]; then
 	dd if=/dev/arandom of=/var/db/host.random bs=65536 count=1 >/dev/null 2>&1
 	chmod 600 /var/db/host.random >/dev/null 2>&1
 	local _c=$?
-	if [ ${_c} -eq 0 -a -n "${rc_scripts}" ]; then
+	if [ ${_c} -eq 0 -a -n "${pkg_scripts}" ]; then
 		echo -n 'stopping package daemons:'
-		while [ -n "${rc_scripts}" ]; do
-			_r=${rc_scripts##* }
-			rc_scripts=${rc_scripts%%*( )${_r}}
+		while [ -n "${pkg_scripts}" ]; do
+			_r=${pkg_scripts##* }
+			pkg_scripts=${pkg_scripts%%*( )${_r}}
 			[ -x /etc/rc.d/${_r} ] && /etc/rc.d/${_r} stop
 		done
 		echo '.'
@@ -342,67 +405,17 @@ else
 fi
 
 # clean up left-over files
-rm -f /etc/nologin
-rm -f /var/spool/lock/LCK.*
-rm -f /var/spool/uucp/STST/*
+rm -f /etc/nologin /var/spool/lock/LCK.* /var/spool/uucp/STST/*
 (cd /var/run && { rm -rf -- *; install -c -m 664 -g utmp /dev/null utmp; })
 (cd /var/authpf && rm -rf -- *)
 
 # save a copy of the boot messages
 dmesg >/var/run/dmesg.boot
 
-echo -n 'starting system logger: '
-start_daemon syslogd
-echo '.'
+make_keys
 
-if [ X"${pf}" != X"NO" ]; then
-	ifconfig pflog0 create >/dev/null 2>&1
-	if ifconfig pflog0 >/dev/null 2>&1; then
-		ifconfig pflog0 up
-		if [ X"${pflogd_flags}" != X"NO" ]; then
-			pflogd ${pflogd_flags}
-		fi
-	fi
-fi
-
-if [ X"${named_flags}" != X"NO" ]; then
-	if ! cmp -s /etc/rndc.key /var/named/etc/rndc.key ; then
-		echo -n "rndc-confgen: generating new shared secret... "
-		if /usr/sbin/rndc-confgen -a -t /var/named >/dev/null 2>&1; then
-			chmod 0640 /var/named/etc/rndc.key >/dev/null 2>&1
-			echo done.
-		else
-			echo failed.
-		fi
-	fi
-fi
-
-echo -n 'starting name service daemons:'
-start_daemon named nsd
-echo '.'
-
-if [ ! -f /etc/isakmpd/private/local.key ]; then
-	echo -n "openssl: generating new isakmpd/iked RSA key... "
-	if /usr/sbin/openssl genrsa -out /etc/isakmpd/private/local.key 2048 \
-	    > /dev/null 2>&1; then
-		chmod 600 /etc/isakmpd/private/local.key
-		openssl rsa -out /etc/isakmpd/local.pub \
-		    -in /etc/isakmpd/private/local.key -pubout > /dev/null 2>&1
-		echo done.
-	else
-		echo failed.
-	fi
-fi
-
-if [ ! -f /etc/iked/private/local.key ]; then
-	# Just copy the generated isakmpd key
-	cp /etc/isakmpd/private/local.key /etc/iked/private/local.key
-	chmod 600 /etc/iked/private/local.key
-	cp /etc/isakmpd/local.pub /etc/iked/local.pub
-fi
-
-echo -n 'starting IPsec daemons:'
-start_daemon isakmpd iked sasyncd
+echo -n 'starting early daemons:'
+start_daemon syslogd ldattach pflogd named nsd ntpd isakmpd iked sasyncd
 echo '.'
 
 if [ X"${ipsec}" != X"NO" ]; then
@@ -411,86 +424,21 @@ if [ X"${ipsec}" != X"NO" ]; then
 	fi
 fi
 
-echo -n 'starting initial daemons:'
-
-if [ X"${portmap}" = X"YES" ]; then
-	echo -n ' portmap';		portmap
+echo -n 'starting RPC daemons:'
+start_daemon portmap
+if [ X"`domainname`" != X"" ]; then
+	start_daemon ypserv ypldap ypbind yppasswdd
 fi
-
-if [ X`domainname` != X ]; then
-	if [ -d /var/yp/`domainname` ]; then
-		# YP server capabilities needed...
-		echo -n ' ypserv';		ypserv ${ypserv_flags}
-		#echo -n ' ypxfrd';		ypxfrd
-	fi
-
-	if [ -d /var/yp/binding ]; then
-		# YP client capabilities needed...
-		echo -n ' ypbind';		ypbind
-	fi
-
-	if [ X"${yppasswdd_flags}" != X"NO" -a -d /var/yp/`domainname` ]; then
-		# if we are the master server, run rpc.yppasswdd
-		_host1=`ypwhich -m passwd 2> /dev/null`
-		_host2=`hostname`
-		if [ `grep '^lookup' /etc/resolv.conf | grep yp | wc -c` -ne 0 ]; then
-			_host1=`ypmatch $_host1 hosts | cut -d'	' -f2`
-			_host2=`ypmatch $_host2 hosts | cut -d'	' -f2 | head -1`
-		else
-			_host1=`echo $_host1 | nslookup | grep '^Name: ' | \
-			    sed -e 's/^Name:    //'`
-			_host2=`echo $_host2 | nslookup | grep '^Name: ' | \
-			    sed -e 's/^Name:    //'`
-		fi
-		if [ "$_host2" = "$_host1" ]; then
-			echo -n ' rpc.yppasswdd'
-			rpc.yppasswdd ${yppasswdd_flags}
-		fi
-	fi
-fi
-
-if [ X"${nfs_server}" = X"YES" -a -s /etc/exports -a \
-    `sed -e '/^#/d' < /etc/exports | wc -l` -ne 0 ]; then
-	rm -f /var/db/mountdtab
-	echo -n > /var/db/mountdtab
-	echo -n ' mountd';		mountd
-	echo -n ' nfsd';		nfsd ${nfsd_flags}
-	if [ X"${lockd}" = X"YES" ]; then
-		echo -n ' rpc.lockd';	rpc.lockd
-		echo -n ' rpc.statd';	rpc.statd
-	fi
-fi
-
-if [ X"${amd}" = X"YES" -a -e ${amd_master} ]; then
-	echo -n ' amd'
-	(cd /etc/amd; amd `cat ${amd_master}`)
-fi
-
-# run rdate before timed/ntpd
-if [ X"${rdate_flags}" != X"NO" ]; then
-	echo -n ' rdate';	rdate -s ${rdate_flags}
-fi
-
-start_daemon timed ldattach ntpd
-
+start_daemon mountd nfsd lockd statd amd
 echo '.'
 
 mount -a
-
 swapctl -A -t noblk
 
 # /var/crash should be a directory or a symbolic link
 # to the crash directory if core dumps are to be saved.
 if [ -d /var/crash ]; then
 	savecore ${savecore_flags} /var/crash
-fi
-
-if [ X"${afs}" = X"YES" -a -c /dev/nnpfs0 ]; then
-	echo -n 'mounting afs:'
-	mkdir -p -m 0755 /afs
-	mount -t nnpfs /dev/nnpfs0 /afs
-	/usr/libexec/afsd ${afsd_flags}
-	echo ' done.'
 fi
 
 if [ X"${check_quotas}" = X"YES" ]; then
@@ -500,21 +448,15 @@ if [ X"${check_quotas}" = X"YES" ]; then
 	quotaon -a
 fi
 
-# build ps databases
-echo -n 'building ps databases:'
-echo -n " kvm"
-kvm_mkdb
-echo -n " dev"
+kvm_mkdb			# build kvm(3) databases
 dev_mkdb
-echo "."
-
 chmod 666 /dev/tty[pqrstuvwxyzPQRST]*
 chown root:wheel /dev/tty[pqrstuvwxyzPQRST]*
 
 # check the password temp/lock file
 if [ -f /etc/ptmp ]; then
 	logger -s -p auth.err \
-	'password file may be incorrect -- /etc/ptmp exists'
+	    'password file may be incorrect -- /etc/ptmp exists'
 fi
 
 echo clearing /tmp
@@ -526,24 +468,7 @@ echo clearing /tmp
     find . ! -name . ! -name lost+found ! -name quota.user \
 	! -name quota.group -execdir rm -rf -- {} \; -type d -prune)
 
-# create Unix sockets directories for X if needed and make sure they have
-# correct permissions
-if [ -d /usr/X11R6/lib ]; then
-	for d in /tmp/.X11-unix /tmp/.ICE-unix ; do
-		if [ -d $d ]; then
-			if [ `ls -ld $d | cut -d' ' -f4` != root ]; then
-				chown root $d
-			fi
-			if [ `ls -ld $d | cut -d' ' -f1` != drwxrwxrwt ]; then
-				chmod 1777 $d
-			fi
-		elif [ -e $d ]; then
-			echo "Error: $d exists and isn't a directory."
-		else
-			mkdir -m 1777 $d
-		fi
-	done
-fi
+setup_X_sockets
 
 [ -f /etc/rc.securelevel ] && . /etc/rc.securelevel
 if [ X"${securelevel}" != X"" ]; then
@@ -555,8 +480,7 @@ fi
 if [ ! -f /etc/motd ]; then
 	install -c -o root -g wheel -m 664 /dev/null /etc/motd
 fi
-T=`mktemp /tmp/_motd.XXXXXXXXXX`
-if [ $? -eq 0 ]; then
+if T=`mktemp /tmp/_motd.XXXXXXXXXX`; then
 	sysctl -n kern.version | sed 1q > $T
 	echo "" >> $T
 	sed '1,/^$/d' < /etc/motd >> $T
@@ -582,108 +506,55 @@ if [ -f /sbin/ldconfig ]; then
 	ldconfig $shlib_dirs
 fi
 
-if [ -x /usr/libexec/vi.recover ]; then
-	echo 'preserving editor files.';	/usr/libexec/vi.recover
-fi
-
-/usr/bin/ssh-keygen -A
+echo 'preserving editor files.';	/usr/libexec/vi.recover
 
 echo -n 'starting network daemons:'
-
-start_daemon sshd snmpd ldpd ripd bgpd ifstated relayd dhcpd \
-	dhcrelay mrouted dvmrpd
+start_daemon sshd snmpd ldpd ripd ospfd ospf6d bgpd ifstated
+start_daemon relayd dhcpd dhcrelay mrouted dvmrpd
 
 if ifconfig lo0 inet6 >/dev/null 2>&1; then
 	fw=`sysctl -n net.inet6.ip6.forwarding`
 	if [ X"${fw}" = X"0" ]; then
 		start_daemon rtsold
 	else
-		start_daemon route6d
-		start_daemon rtadvd
+		start_daemon route6d rtadvd
 	fi
 fi
 
-start_daemon hostapd rwhod lpd ldapd sendmail smtpd httpd ftpd \
-	ftpproxy identd inetd rarpd bootparamd rbootd mopd
-
-if [ X"${bt}" != X"NO" ]; then
-	echo -n ' btd';			/usr/sbin/btd
-	if [ -f ${bt_rules} ]; then
-		btctl -f ${bt_rules}
-	fi
-fi
-
-if [ X"${spamd_flags}" != X"NO" ]; then
-	if [ X"${spamd_black}" != X"NO" ]; then
-		spamd_flags="${spamd_flags} -b"
-	fi
-	echo -n ' spamd';		eval /usr/libexec/spamd ${spamd_flags}
-	/usr/libexec/spamd-setup -D
-	if [ X"${spamd_black}" = X"NO" ]; then
-		echo -n ' spamlogd'
-		/usr/libexec/spamlogd ${spamlogd_flags}
-	fi
-fi
-
+start_daemon hostapd rwhod lpd ldapd sendmail smtpd httpd ftpd
+start_daemon ftpproxy identd inetd rarpd bootparamd rbootd mopd
+start_daemon spamd spamlogd kdc kadmind kpasswdd
 echo '.'
 
-mixerctl_conf
-
-if [ X"${aucat_flags}" != X"NO" ]; then
-	aucat -l ${aucat_flags}
-fi
-
-# KerberosV master KDC
-if [ X"${krb5_master_kdc}" = X"YES" ]; then
-	echo 'KerberosV master KDC'
-	/usr/libexec/kdc &
-	/usr/libexec/kadmind &
-	/usr/libexec/kpasswdd &
-fi
-
-# KerberosV slave KDC
-if [ X"${krb5_slave_kdc}" = X"YES" ]; then
-	echo 'KerberosV slave KDC'
-	/usr/libexec/kdc &
-	# Remember to enable hpropd in inetd.conf
+if [ X"${spamd_flags}" != X"NO" ]; then
+	/usr/libexec/spamd-setup -D
 fi
 
 # If rc.firstime exists, run it just once, and make sure it is deleted
 if [ -f /etc/rc.firsttime ]; then
 	mv /etc/rc.firsttime /etc/rc.firsttime.run
-	. /etc/rc.firsttime.run 2>&1 | mail -s 'rc.firsttime output' root >/dev/null
+	. /etc/rc.firsttime.run 2>&1 | tee /dev/tty |
+		mail -s 'rc.firsttime output' root >/dev/null
 fi
 rm -f /etc/rc.firsttime.run
 
 # Run rc.d(8) scripts from packages
-if [ -n "${rc_scripts}" ]; then
+if [ -n "${pkg_scripts}" ]; then
 	echo -n 'starting package daemons:'
-	for _r in $rc_scripts; do
-		[ -x /etc/rc.d/${_r} ] && /etc/rc.d/${_r} start
+	for _r in $pkg_scripts; do
+		[ -x /etc/rc.d/${_r} ] && start_daemon ${_r}
 	done
 	echo '.'
 fi
 
 [ -f /etc/rc.local ] && . /etc/rc.local
 
-echo -n 'starting standard daemons:'
+ifconfig -g carp -carpdemote 128	# disable carp interlock
 
-start_daemon apmd sensorsd hotplugd watchdogd cron
-
-# disable carp interlock
-ifconfig -g carp -carpdemote 128
-
+mixerctl_conf
+echo -n 'starting local daemons:'
+start_daemon apmd sensorsd hotplugd watchdogd cron aucat wsmoused xdm
 echo '.'
 
 date
-
-if [ X"${wsmoused_flags}" != X"NO" -a -x /usr/sbin/wsmoused ]; then
-	echo 'starting wsmoused...';	/usr/sbin/wsmoused ${wsmoused_flags}
-fi
-
-# Alternatively, on some architectures, xdm may be started in /etc/ttys.
-if [ X"${xdm_flags}" != X"NO" -a -x /usr/X11R6/bin/xdm ]; then
-	echo 'starting xdm...';		/usr/X11R6/bin/xdm ${xdm_flags}
-fi
-
 exit 0

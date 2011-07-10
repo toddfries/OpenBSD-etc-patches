@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.299 2011/07/07 02:22:11 ajacoutot Exp $
+#	$OpenBSD: Makefile,v 1.307 2011/07/08 20:21:01 ajacoutot Exp $
 
 TZDIR=		/usr/share/zoneinfo
 LOCALTIME=	Canada/Mountain
@@ -31,12 +31,13 @@ BIN1+=	wsconsctl.conf
 BIN2=	motd
 
 # -r-xr-xr-x
-RCDAEMONS=	apmd bgpd bootparamd cron dhcpd dhcrelay dvmrpd ftpd ftpproxy \
-		hostapd hotplugd httpd identd ifstated iked inetd isakmpd ldapd \
-		ldattach ldpd lpd mopd mrouted named nsd ntpd portmap rarpd \
-		rbootd relayd  ripd route6d rtadvd rtsold rwhod sasyncd sendmail \
-		sensorsd smtpd snmpd sshd syslogd timed watchdogd ypbind ypldap \
-		yppasswdd ypserv
+RCDAEMONS=	amd apmd aucat bgpd bootparamd btd cron dhcpd dhcrelay dvmrpd \
+		ftpd  ftpproxy hostapd hotplugd httpd identd ifstated iked \
+		inetd isakmpd ldapd ldattach ldpd lpd mopd mrouted named nsd \
+		ntpd portmap pflogd rarpd rbootd relayd ripd route6d rtadvd \
+		rtsold rwhod sasyncd sendmail sensorsd smtpd snmpd spamd sshd \
+		syslogd watchdogd wsmoused xdm ypbind ypldap yppasswdd ypserv \
+		kdc kadmind kpasswdd nfsd mountd lockd statd spamlogd
 
 MISETS=	base${OSrev}.tgz comp${OSrev}.tgz \
 	man${OSrev}.tgz game${OSrev}.tgz etc${OSrev}.tgz
