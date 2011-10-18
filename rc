@@ -1,4 +1,4 @@
-#	$OpenBSD: rc,v 1.393 2011/09/16 10:11:20 robert Exp $
+#	$OpenBSD: rc,v 1.396 2011/10/13 07:54:06 ajacoutot Exp $
 
 # System startup script run by init on autoboot
 # or after single-user.
@@ -221,6 +221,11 @@ INRC=1; export INRC
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
 export PATH
 
+# must set the domainname before rc.conf, so YP startup choices can be made
+if [ -f /etc/defaultdomain ]; then
+	domainname `stripcom /etc/defaultdomain`
+fi
+
 # pick up option configuration
 . /etc/rc.conf
 
@@ -257,11 +262,6 @@ if [ X"$1" = X"shutdown" ]; then
 		echo single user: not running /etc/rc.shutdown
 	fi
 	exit 0
-fi
-
-# Configure ccd devices.
-if [ -f /etc/ccd.conf ]; then
-	ccdconfig -C
 fi
 
 # Configure raid devices.
@@ -397,6 +397,7 @@ make_keys
 
 echo -n 'starting early daemons:'
 start_daemon syslogd ldattach pflogd named nsd ntpd isakmpd iked sasyncd
+start_daemon ldapd
 echo '.'
 
 if [ X"${ipsec}" != X"NO" ]; then
@@ -502,9 +503,9 @@ if ifconfig lo0 inet6 >/dev/null 2>&1; then
 	fi
 fi
 
-start_daemon hostapd rwhod lpd ldapd sendmail smtpd httpd ftpd
-start_daemon ftpproxy identd inetd rarpd bootparamd rbootd mopd
-start_daemon popa3d spamd spamlogd kdc kadmind kpasswdd aucat
+start_daemon hostapd rwhod lpd sendmail smtpd httpd ftpd ftpproxy
+start_daemon identd inetd rarpd bootparamd rbootd mopd popa3d
+start_daemon spamd spamlogd kdc kadmind kpasswdd aucat
 echo '.'
 
 if [ X"${spamd_flags}" != X"NO" ]; then
