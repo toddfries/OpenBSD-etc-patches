@@ -1,4 +1,4 @@
-#	$OpenBSD: rc.subr,v 1.45 2011/07/31 20:22:34 robert Exp $
+#	$OpenBSD: rc.subr,v 1.55 2011/10/15 16:05:15 halex Exp $
 #
 # Copyright (c) 2010, 2011 Antoine Jacoutot <ajacoutot@openbsd.org>
 # Copyright (c) 2010, 2011 Ingo Schwarze <schwarze@openbsd.org>
@@ -24,6 +24,25 @@ rc_err() {
 	exit 1
 }
 
+rc_usage() {
+	rc_err "usage: $0 [-df] {start|check|reload|restart|stop}"
+}
+
+rc_write_runfile() {
+	[ -d ${_RC_RUNDIR} ] || mkdir -p ${_RC_RUNDIR} && \
+		print -rn -- "${pexp}" > ${_RC_RUNFILE}
+}
+
+rc_read_runfile() {
+	local _new_pexp
+	[ -f ${_RC_RUNFILE} ] && _new_pexp=$(< ${_RC_RUNFILE})
+	[ -n "${_new_pexp}" ] && pexp="${_new_pexp}"
+}
+
+rc_rm_runfile() {
+	[ -f ${_RC_RUNFILE} ] && rm ${_RC_RUNFILE}
+}
+
 rc_start() {
 	${rcexec} "${daemon} ${daemon_flags} ${_bg}"
 }
@@ -41,7 +60,7 @@ rc_stop() {
 }
 
 rc_do() {
-	if [ -n "${RC_DEBUG}" ]; then
+	if [ -n "${_RC_DEBUG}" ]; then
 		echo "doing $@" && "$@"
 	else
 		"$@" >/dev/null 2>&1
@@ -76,16 +95,17 @@ rc_wait() {
 }
 
 rc_cmd() {
-	[ $(id -u) -eq 0 ] || \
-		rc_err "$0: need root privileges"
+	local _bg _n
 
-	[ X"${daemon_flags}" = X"NO" ] && exit 1
+	[ -z "${_RC_FORCE}" ] && [ X"${daemon_flags}" = X"NO" ] && exit 1
 
 	eval _enotsup=\${rc_${1}}
 	[ X"${_enotsup}" != X"NO" ] || rc_err "$0: $1 is not supported"
 
-	[ X"${rc_bg}" = X"YES" ] && local _bg="&"
-	[ -n "${RC_DEBUG}" ] || local _n="-n"
+	[ X"${rc_bg}" = X"YES" ] && _bg="&"
+	[ -n "${_RC_DEBUG}" ] || _n="-n"
+
+	rc_do rc_read_runfile
 
 	case "$1" in
 	check)
@@ -98,15 +118,19 @@ rc_cmd() {
 			if type rc_pre >/dev/null; then
 				rc_do rc_pre || break
 			fi
+			# XXX only checks the status of the return code,
+			# and _not_ that the daemon is actually running
 			rc_do rc_start || break
 			if [ -n "${_bg}" ]; then
 				sleep 1
 				rc_do rc_wait start || break
 			fi
+			rc_do rc_write_runfile
 			rc_exit ok
 		done
 		# handle failure
 		type rc_post >/dev/null && rc_do rc_post
+		rc_do rc_rm_runfile
 		rc_exit failed
 		;;
 	stop)
@@ -117,6 +141,7 @@ rc_cmd() {
 		if type rc_post >/dev/null; then \
 			rc_do rc_post || rc_exit failed
 		fi
+		rc_do rc_rm_runfile
 		rc_exit ok
 		;;
 	reload)
@@ -127,18 +152,35 @@ rc_cmd() {
 		rc_exit ok
 		;;
 	restart)
-		/etc/rc.d/${_name} stop && /etc/rc.d/${_name} start
+		/etc/rc.d/${_name} ${_RC_DEBUG} ${_RC_FORCE} stop &&
+			/etc/rc.d/${_name} ${_RC_DEBUG} ${_RC_FORCE} start
 		;;
 	*)
-		rc_err "usage: $0 {start|check|reload|restart|stop}"
+		rc_usage
+		;;
 	esac
 }
+
+[ $(id -u) -eq 0 ] || rc_err "$0: need root privileges"
 
 [ -z "${local_rcconf}" ] && . /etc/rc.conf
 
 [ -n "${daemon}" ] || rc_err "$0: daemon is not set"
 
+unset _RC_DEBUG _RC_FORCE
+while getopts "df" c; do
+	case "$c" in
+		d) _RC_DEBUG=-d;;
+		f) _RC_FORCE=-f;;
+		*) rc_usage;;
+	esac
+done
+shift $((OPTIND-1))
+
 _name=$(basename $0)
+_RC_RUNDIR=/var/run/rc.d
+_RC_RUNFILE=${_RC_RUNDIR}/${_name}
+
 eval _rcflags=\${${_name}_flags}
 eval _rcuser=\${${_name}_user}
 
@@ -148,6 +190,7 @@ getcap -f /etc/login.conf ${_name} 1>/dev/null 2>&1 && \
 [ -z "${daemon_class}" ] && daemon_class=daemon
 [ -z "${daemon_user}"  ] && daemon_user=root
 
+[ -n "${_RC_FORCE}" ] && [ X"${_rcflags}" = X"NO" ] && unset _rcflags
 [ -n "${_rcflags}" ] && daemon_flags=${_rcflags}
 [ -n "${_rcuser}"  ] && daemon_user=${_rcuser}
 
