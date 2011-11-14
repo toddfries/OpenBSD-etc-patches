@@ -1,6 +1,6 @@
 define(MACHINE,i386)dnl
 vers(__file__,
-	{-$OpenBSD: MAKEDEV.md,v 1.59 2011/06/26 23:28:23 tedu Exp $-},
+	{-$OpenBSD: MAKEDEV.md,v 1.61 2011/10/22 19:31:23 miod Exp $-},
 etc.MACHINE)dnl
 dnl
 dnl Copyright (c) 2001-2006 Todd T. Fries <todd@OpenBSD.org>
@@ -32,7 +32,6 @@ _DEV(ramdisk)
 _DEV(std)
 _DEV(local)
 _TITLE(dis)
-_DEV(ccd, 18, 16)
 _DEV(cd, 15, 6)
 _DEV(flo, 9, 2)
 _DEV(raid, 54, 19)
@@ -124,6 +123,7 @@ ttyc*)
 dnl
 dnl i386 specific targets
 dnl
+twrget(all, au, audio, 0, 1, 2)dnl
 target(all, ch, 0)dnl
 target(all, nnpfs, 0)dnl
 target(all, vscsi, 0)dnl
@@ -139,7 +139,6 @@ target(all, rd, 0)dnl
 target(all, cd, 0, 1)dnl
 target(all, sd, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9)dnl
 target(all, vnd, 0, 1, 2, 3)dnl
-target(all, ccd, 0, 1, 2, 3)dnl
 target(all, bktr, 0)dnl
 target(all, gpio, 0, 1, 2)dnl
 target(all, nvram)dnl
