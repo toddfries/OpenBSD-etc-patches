@@ -7,8 +7,8 @@ daemon="/usr/sbin/amd"
 . /etc/rc.d/rc.subr
 
 rc_reload=NO
-rc_restart=NO
-rc_stop=NO
+#rc_restart=NO
+#rc_stop=NO
 
 rc_pre() {
 	[ -e ${amd_master} ] || return 1
@@ -17,6 +17,21 @@ rc_pre() {
 
 rc_start() {
 	${rcexec} "cd /etc/amd; ${daemon} ${daemon_flags}"
+}
+rc_stop() {
+	for fs in $(amq | awk '$2 =~ /nfs/{print $1}')
+	do
+		amq -u $fs
+	done
+	if [ "$(amq | awk '$2 =~ /nfs/{print $1}')" ]; then
+		sleep 1
+	fi
+	pkill -f "^${pexp}"
+	rc_do rc_wait stop
+	for fs in $(mount | awk '/^\/tmp_mnt/.* type nfs /{print $3}')
+	do
+		umount -f $fs
+	done
 }
 
 rc_cmd $1
