@@ -28,7 +28,7 @@ rc_stop() {
 	fi
 	pkill -f "^${pexp}"
 	rc_do rc_wait stop
-	for fs in $(mount | awk '/^\/tmp_mnt/.* type nfs /{print $3}')
+	for fs in $(mount | awk '/ /tmp_mnt/.* type nfs /{print $3}')
 	do
 		umount -f $fs
 	done
