@@ -159,6 +159,15 @@ make_keys()
 		fi
 	fi
 
+	if [ X"${unbound_flags}" != X"NO" ]; then
+		echo -n "unbound-control-setup: generating self-signed certificate and private keys... "
+		if unbound-control-setup >/dev/null 2>&1; then
+			echo done.
+		else
+			echo failed.
+		fi
+	fi
+
 	if [ ! -f /etc/isakmpd/private/local.key ]; then
 		echo -n "openssl: generating isakmpd/iked RSA key... "
 		if openssl genrsa -out /etc/isakmpd/private/local.key 2048 \
@@ -396,8 +405,8 @@ dmesg >/var/run/dmesg.boot
 make_keys
 
 echo -n 'starting early daemons:'
-start_daemon syslogd ldattach pflogd named nsd ntpd isakmpd iked sasyncd
-start_daemon ldapd
+start_daemon syslogd ldattach pflogd named unbound nsd ntpd isakmpd iked
+start_daemon sasyncd ldapd
 echo '.'
 
 if [ X"${ipsec}" != X"NO" ]; then
