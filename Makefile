@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.310 2011/10/06 20:49:25 deraadt Exp $
+#	$OpenBSD: Makefile,v 1.314 2012/02/19 11:34:36 robert Exp $
 
 TZDIR=		/usr/share/zoneinfo
 LOCALTIME=	Canada/Mountain
@@ -37,7 +37,7 @@ BIN1=	changelist csh.cshrc csh.login csh.logout daily dhcpd.conf \
 	rbootd.conf rc rc.conf rc.local rc.securelevel rc.shutdown \
 	remote rpc services shells syslog.conf weekly \
 	etc.${MACHINE}/disktab dhclient.conf mailer.conf ntpd.conf \
-	moduli pf.os sensorsd.conf ifstated.conf
+	moduli pf.os sensorsd.conf ifstated.conf mixerctl.conf
 
 .if ${MACHINE} != "aviion" && ${MACHINE} != "mvme68k" && \
     ${MACHINE} != "mvme88k"
@@ -48,14 +48,14 @@ BIN1+=	wsconsctl.conf
 BIN2=	motd
 
 # -r-xr-xr-x
-RCDAEMONS=	amd apmd aucat bgpd bootparamd btd cron dhcpd dhcrelay dvmrpd \
+RCDAEMONS=	amd apmd bgpd bootparamd btd cron dhcpd dhcrelay dvmrpd \
 		ftpd ftpproxy hostapd hotplugd httpd identd ifstated iked \
-		inetd isakmpd ldapd ldattach ldpd lpd mopd mrouted named nsd \
-		ntpd ospfd ospf6d portmap pflogd rarpd rbootd relayd ripd \
+		inetd isakmpd ldapd ldattach ldpd lpd mopd mrouted named nginx \
+		nsd ntpd ospfd ospf6d portmap pflogd rarpd rbootd relayd ripd \
 		route6d rtadvd rtsold rwhod sasyncd sendmail sensorsd smtpd \
 		snmpd spamd sshd syslogd unbound watchdogd wsmoused xdm ypbind \
 		ypldap yppasswdd ypserv kdc kadmind kpasswdd nfsd mountd lockd \
-		statd spamlogd
+		statd spamlogd sndiod popa3d
 
 MISETS=	base${OSrev}.tgz comp${OSrev}.tgz \
 	man${OSrev}.tgz game${OSrev}.tgz etc${OSrev}.tgz
@@ -279,6 +279,7 @@ distribution-etc-root-var: distrib-dirs
 	cd ../usr.bin/bgplg && exec ${MAKE} distribution
 	cd ../usr.bin/mail && exec ${MAKE} distribution
 	cd ../usr.sbin/ldapd && exec ${MAKE} distribution
+	cd ../usr.sbin/nginx && exec ${MAKE} -f Makefile.bsd-wrapper distribution
 	cd mail && exec ${MAKE} distribution
 	${INSTALL} -c -o root -g wheel -m 600 root/root.mail \
 	    ${DESTDIR}/var/mail/root
