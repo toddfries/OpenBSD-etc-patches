@@ -273,7 +273,8 @@ if [ X"$1" = X"shutdown" ]; then
 	exit 0
 fi
 
-sh /etc/rc.crypto
+# Start any softraid volumes not auto-assembled
+ksh /etc/rc.sr
 
 swapctl -A -t blk
 
@@ -316,7 +317,7 @@ fi
 trap "echo 'Boot interrupted.'; exit 1" 3
 
 umount -a >/dev/null 2>&1
-mount -a -t nonfs,vnd
+mount -a -t nonfs,vnd >/dev/null 2>&1
 mount -uw /		# root on nfs requires this, others aren't hurt
 rm -f /fastboot		# XXX (root now writeable)
 
@@ -388,8 +389,43 @@ random_seed
 
 # clean up left-over files
 rm -f /etc/nologin /var/spool/lock/LCK.* /var/spool/uucp/STST/*
-(cd /var/run && { rm -rf -- *; install -c -m 664 -g utmp /dev/null utmp; })
+(cd /var/run && {
+	rm -rf -- *
+	if [ -f /etc/iscsi.conf ]; then
+		echo "Starting iscsi"
+		# cannot use rc.subr due to its use of 'id'
+		isock=/etc/iscsi.sock
+		/sbin/iscsid -s $isock
+        	while ! [ -S $isock ]; do sleep .1; done
+		sleep 1
+		/sbin/iscsictl -s $isock reload > /dev/null 2>&1
+		i=0
+		disknames=$(sysctl -n hw.disknames)
+		sleep 3
+		while :
+		do
+			let i=i+1
+			sleep 2
+			newdisk=$(sysctl -n hw.disknames)
+			[ "$newdisk" = "$disknames" ] && break
+			disknames="$newdisk"
+			if ! [[ $(ps awx 2>/dev/null) == */sbin/iscsid* ]]; then
+				break
+			fi
+		done
+		/bin/ksh /etc/rc.sr
+		for fs in /usr /usr/local /home
+		do
+			[[ $(mount) == *" $fs "* ]] || {
+				fsck -yp $fs && mount $fs
+			}
+		done
+	fi
+	install -c -m 664 -g utmp /dev/null utmp
+})
 (cd /var/authpf && rm -rf -- *)
+
+mount -a -t nonfs,vnd
 
 # save a copy of the boot messages
 dmesg >/var/run/dmesg.boot
