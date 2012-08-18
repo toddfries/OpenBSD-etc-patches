@@ -1,4 +1,4 @@
-#	$OpenBSD: 4.4BSD.dist,v 1.221 2012/02/19 11:34:36 robert Exp $
+#	$OpenBSD: 4.4BSD.dist,v 1.224 2012/07/07 16:00:55 robert Exp $
 
 /set type=dir uname=root gname=wheel mode=0755
 # .
@@ -401,11 +401,6 @@ pkgconfig	gname=bin uname=root mode=0755
 
 # ./usr/libdata
 libdata
-
-# ./usr/libdata/lint
-lint
-# ./usr/libdata/lint
-..
 
 # ./usr/libdata/perl5
 perl5
@@ -1232,8 +1227,6 @@ loongson
 ..
 luna88k
 ..
-mac68k
-..
 macppc
 ..
 mvme68k
@@ -1313,8 +1306,6 @@ landisk
 loongson
 ..
 luna88k
-..
-mac68k
 ..
 macppc
 ..
@@ -1792,6 +1783,12 @@ vi.recover	 mode=01777
 
 # ./www
 www type=dir uname=root gname=daemon mode=755
+
+# ./www/cache
+cache type=dir uname=www gname=daemon mode=1700
+
+# ./www
+..
 
 # ./www/dev
 dev type=dir uname=root gname=daemon mode=755
