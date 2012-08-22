@@ -1,4 +1,4 @@
-#	$OpenBSD: rc.subr,v 1.58 2012/07/07 10:28:07 ajacoutot Exp $
+#	$OpenBSD: rc.subr,v 1.63 2012/08/21 06:38:52 ajacoutot Exp $
 #
 # Copyright (c) 2010, 2011 Antoine Jacoutot <ajacoutot@openbsd.org>
 # Copyright (c) 2010, 2011 Ingo Schwarze <schwarze@openbsd.org>
@@ -48,7 +48,7 @@ rc_start() {
 }
 
 rc_check() {
-	pkill -0 -f "^${pexp}"
+	pgrep -q -f "^${pexp}"
 }
 
 rc_reload() {
@@ -68,6 +68,7 @@ rc_do() {
 }
 
 rc_exit() {
+	local _pfix
 	[ -z "${INRC}" -o X"$1" != X"ok" ] && _pfix="($1)"
 	echo ${INRC:+'-n'} "${_pfix}"
 	[ X"$1" = X"ok" ] && exit 0 || exit 1
@@ -94,7 +95,11 @@ rc_wait() {
 }
 
 rc_cmd() {
-	local _bg _n
+	local _bg _enotsup _n
+
+	[ "$(id -u)" -eq 0 ] || \
+		[ X"${rc_usercheck}" != X"NO" -a X"$1" = "Xcheck" ] || \
+		rc_err "$0: need root privileges"
 
 	if [ -z "${_RC_FORCE}" ] && [ X"${daemon_flags}" = X"NO" ]
 	then
@@ -167,8 +172,6 @@ rc_cmd() {
 	esac
 }
 
-[ $(id -u) -eq 0 ] || rc_err "$0: need root privileges"
-
 [ -z "${local_rcconf}" ] && . /etc/rc.conf
 
 [ -n "${daemon}" ] || rc_err "$0: daemon is not set"
@@ -200,7 +203,11 @@ getcap -f /etc/login.conf ${_name} 1>/dev/null 2>&1 && \
 [ -n "${_rcflags}" ] && daemon_flags=${_rcflags}
 [ -n "${_rcuser}"  ] && daemon_user=${_rcuser}
 
+# sanitize
 daemon_flags=$(printf ' %s' ${daemon_flags})
 daemon_flags=${daemon_flags## }
+readonly daemon_class
+unset _rcflags _rcuser
+
 pexp="${daemon}${daemon_flags:+ ${daemon_flags}}"
 rcexec="su -l -c ${daemon_class} -s /bin/sh ${daemon_user} -c"
