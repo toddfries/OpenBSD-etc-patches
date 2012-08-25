@@ -383,6 +383,38 @@ if [ X"${pf}" != X"NO" ]; then
 fi
 
 mount -s /usr >/dev/null 2>&1
+
+if [ -f /etc/iscsi.conf -a -x /sbin/iscsid -a -x /sbin/iscsictl ]; then
+	echo "Starting iscsi"
+	# cannot use rc.subr due to its use of 'id'
+	isock=/etc/iscsi.sock
+	/sbin/iscsid -s $isock
+       	while ! [ -S $isock ]; do sleep .1; done
+	sleep 1
+	/sbin/iscsictl -s $isock reload > /dev/null 2>&1
+	i=0
+	disknames=$(sysctl -n hw.disknames)
+	sleep 3
+	while :
+	do
+		let i=i+1
+		sleep 2
+		newdisk=$(sysctl -n hw.disknames)
+		[ "$newdisk" = "$disknames" ] && break
+		disknames="$newdisk"
+		if ! [[ $(ps awx 2>/dev/null) == */sbin/iscsid* ]]; then
+			break
+		fi
+	done
+	/bin/ksh /etc/rc.sr
+	for fs in /usr /usr/local /home /var
+	do
+		[[ $(mount) == *" $fs "* ]] || {
+			fsck -yp $fs && mount $fs
+		}
+	done
+fi
+
 mount -s /var >/dev/null 2>&1
 
 random_seed
@@ -391,36 +423,6 @@ random_seed
 rm -f /etc/nologin /var/spool/lock/LCK.* /var/spool/uucp/STST/*
 (cd /var/run && {
 	rm -rf -- *
-	if [ -f /etc/iscsi.conf ]; then
-		echo "Starting iscsi"
-		# cannot use rc.subr due to its use of 'id'
-		isock=/etc/iscsi.sock
-		/sbin/iscsid -s $isock
-        	while ! [ -S $isock ]; do sleep .1; done
-		sleep 1
-		/sbin/iscsictl -s $isock reload > /dev/null 2>&1
-		i=0
-		disknames=$(sysctl -n hw.disknames)
-		sleep 3
-		while :
-		do
-			let i=i+1
-			sleep 2
-			newdisk=$(sysctl -n hw.disknames)
-			[ "$newdisk" = "$disknames" ] && break
-			disknames="$newdisk"
-			if ! [[ $(ps awx 2>/dev/null) == */sbin/iscsid* ]]; then
-				break
-			fi
-		done
-		/bin/ksh /etc/rc.sr
-		for fs in /usr /usr/local /home
-		do
-			[[ $(mount) == *" $fs "* ]] || {
-				fsck -yp $fs && mount $fs
-			}
-		done
-	fi
 	install -c -m 664 -g utmp /dev/null utmp
 })
 (cd /var/authpf && rm -rf -- *)
