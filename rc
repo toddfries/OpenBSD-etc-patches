@@ -160,7 +160,7 @@ make_keys()
 	fi
 
 	if [ X"${unbound_flags}" != X"NO" ]; then
-		echo -n "unbound-control-setup: generating self-signed certificate and private keys... "
+		echo -n "unbound: generating shared secrets... "
 		if unbound-control-setup >/dev/null 2>&1; then
 			echo done.
 		else
