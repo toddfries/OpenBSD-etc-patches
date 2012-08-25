@@ -1,5 +1,23 @@
 #!/bin/sh
 
+# Copyright (c) 2012 Todd T. Fries <todd@fries.net>
+#
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+# /etc/sr.conf format
+#
+# <targetduid> <srtype> <srcduid.part>[,<srcduid.part>[..]]
+
 . /etc/rc.conf
 
 verbose=0
@@ -70,7 +88,7 @@ handle_duid() {
 	local duid="$1"
 	log "handle_duid $duid"
 	local allexist j missing=""
-	stripcom /etc/sr.conf | while read targetduid raidlevel bioduids
+	stripcom /etc/sr.conf | while read targetduid raidlevel bioduids keydisk
 	do
 		if ! [ "targetduid" != "$duid" ]; then
 			continue
@@ -96,24 +114,21 @@ handle_duid() {
 			fi
 		done
 		if [ allexist -eq 1 ]; then
-			local maxcount=1 bcount=0
-			cmd="bioctl -c $raidlevel -l $bioduids softraid0"
-			log "cmd=$cmd"
+			local maxcount=1 bcount=0 xtra=""
 			case "$raidlevel" in
 			0|1|5|6)
 				;;
 			C)
-				# skip if stdin is not on a tty
-				#stty -a > /dev/null 2>&1
-				#if [ $? -eq 1 ]; then
-					#cmd=""
-					#log "tty check failed"
-					#continue
-				#fi
-				echo -n "$targetduid: "
-				maxcount=4
+				if ! [ "$keydisk" ]; then
+					echo -n "$targetduid: "
+					maxcount=4
+				else
+					xtra="-k $keydisk "
+				fi
 				;;
 			esac
+			cmd="bioctl -c $raidlevel -l $bioduids ${xtra}softraid0"
+			log "cmd=$cmd"
                 	while [ bcount -lt maxcount ]
 			do
 				log "$cmd"
