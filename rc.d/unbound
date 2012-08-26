@@ -1,0 +1,29 @@
+#!/bin/sh
+#
+# $OpenBSD: unbound
+
+daemon="/usr/sbin/unbound"
+daemon_flags="-c /var/unbound/etc/unbound.conf"
+
+. /etc/rc.d/rc.subr
+
+unboundcontrol="/usr/sbin/unbound-control"
+rootkey="/var/unbound/etc/root.key"
+
+rc_pre() {
+	if egrep " *auto-trust-anchor-file:" /var/unbound/etc/unbound.conf >/dev/null; then
+		/usr/sbin/unbound-anchor ||:
+		chgrp  _unbound ${rootkey}
+		chmod 664 ${rootkey}
+	fi
+}
+
+rc_reload() {
+	${unboundcontrol} reload
+}	
+
+rc_stop() {
+	${unboundcontrol} stop
+}
+
+rc_cmd $1

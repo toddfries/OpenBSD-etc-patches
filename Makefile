@@ -53,9 +53,9 @@ RCDAEMONS=	amd apmd bgpd bootparamd cron dhcpd dhcrelay dvmrpd \
 		inetd isakmpd ldapd ldattach ldpd lpd mopd mrouted named nginx \
 		nsd ntpd ospfd ospf6d portmap pflogd rarpd rbootd relayd ripd \
 		route6d rtadvd rtsold rwhod sasyncd sendmail sensorsd smtpd \
-		snmpd spamd sshd syslogd watchdogd wsmoused xdm ypbind ypldap \
-		yppasswdd ypserv kdc kadmind kpasswdd nfsd mountd lockd statd \
-		spamlogd sndiod popa3d tftpd
+		snmpd spamd sshd syslogd unbound watchdogd wsmoused xdm ypbind \
+		ypldap yppasswdd ypserv kdc kadmind kpasswdd nfsd mountd lockd \
+		statd spamlogd sndiod popa3d tftpd
 
 MISETS=	base${OSrev}.tgz comp${OSrev}.tgz \
 	man${OSrev}.tgz game${OSrev}.tgz etc${OSrev}.tgz
@@ -219,6 +219,15 @@ distribution-etc-root-var: distrib-dirs
 		    ${DESTDIR}/var/named/standard/loopback; \
 		${INSTALL} -c -o root -g wheel -m 644 db.loopback6.arpa \
 		    ${DESTDIR}/var/named/standard/loopback6.arpa
+	cd unbound; \
+		${INSTALL} -d -o root -g wheel -m 755 \
+		    ${DESTDIR}/var/unbound/var/dev; \
+		${INSTALL} -d -o root -g _unbound -m 775 \
+		    ${DESTDIR}/var/unbound/var/run; \
+		${INSTALL} -c -o root -g wheel -m 644 unbound.conf \
+		    ${DESTDIR}/var/unbound/etc/unbound.conf; \
+		${INSTALL} -c -o root -g wheel -m 644 root.hint \
+		    ${DESTDIR}/var/unbound/etc/root.hint
 	/bin/rm -f ${DESTDIR}/etc/localtime
 	ln -s ${TZDIR}/${LOCALTIME} ${DESTDIR}/etc/localtime
 	/bin/rm -f ${DESTDIR}/etc/rmt
