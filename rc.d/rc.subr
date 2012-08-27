@@ -1,4 +1,4 @@
-#	$OpenBSD: rc.subr,v 1.56 2011/11/30 08:06:02 ajacoutot Exp $
+#	$OpenBSD: rc.subr,v 1.58 2012/07/07 10:28:07 ajacoutot Exp $
 #
 # Copyright (c) 2010, 2011 Antoine Jacoutot <ajacoutot@openbsd.org>
 # Copyright (c) 2010, 2011 Ingo Schwarze <schwarze@openbsd.org>
@@ -74,9 +74,8 @@ rc_exit() {
 }
 
 rc_wait() {
-	i=0
-	[ -n "$2" ] && w=$2 || w=30
-	while [ $i -lt $w ]; do
+	local _i=0 _w=${2:-30}
+	while [ $_i -lt $_w ]; do
 		case "$1" in
 			reload|start)
 				rc_do rc_check && return 0
@@ -89,7 +88,7 @@ rc_wait() {
 				;;
 		esac
 		sleep 1
-		i=$((i+1))
+		_i=$((_i+1))
 	done
 	return 1
 }
@@ -97,7 +96,14 @@ rc_wait() {
 rc_cmd() {
 	local _bg _n
 
-	[ -z "${_RC_FORCE}" ] && [ X"${daemon_flags}" = X"NO" ] && exit 1
+	if [ -z "${_RC_FORCE}" ] && [ X"${daemon_flags}" = X"NO" ]
+	then
+		if [ -n "${_RC_DEBUG}" ]
+		then
+			rc_err "$0: no $1 without -f, ${_name}_flags=NO"
+		fi
+		exit 1
+	fi
 
 	eval _enotsup=\${rc_${1}}
 	[ X"${_enotsup}" != X"NO" ] || rc_err "$0: $1 is not supported"
