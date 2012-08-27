@@ -133,6 +133,7 @@ handle_duid() {
 			do
 				log "$cmd"
 				if $cmd; then
+					((attachcount++))
 					break
 				fi
                 		let bcount=bcount+1
@@ -225,13 +226,20 @@ if [ "$1" = "-a" ]; then
 	handle_attach "$@"
 	exit $?
 fi
-
 if [ "$1" ]; then
 	duids="$@"
 else
 	duids=$(stripcom /etc/sr.conf|while read line rest; do echo $line; done)
 fi
-for DUID in $duids
+
+attachcount=0
+oldattachcount=1
+
+while [ attachcount -ne oldattachcount ]
 do
-	handle_duid "$DUID"
+	oldattachcount=attachcount
+	for DUID in $duids
+	do
+		handle_duid "$DUID"
+	done
 done
