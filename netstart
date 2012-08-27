@@ -26,6 +26,57 @@ isalphanumeric() {
 	return 0
 }
 
+# Spew to stdout $etc/$1 if it exists, otherwise /etc/$1
+nets_file() {
+	local n
+	[ -f $etc/$1 ] && n=$etc || n=/etc
+	echo $n/$1
+}
+
+# tear down an if all ways we know how
+#  how to notify dhclient, rtsold, rtadvd, dhcpd??
+#  in teardown, build a list of if's to teardown, and their inet/inet6 addrs
+#  when setting if addrs, save this info
+#  afterwords, go through each if, compare addrs, if teardown lists something
+#   that setting if addrs did not, then remove it
+#  XXX this is broken currently for diskless setups especially
+teardown() {
+	if="$1"
+
+	# down the if, error on down means $if is perhaps nonexistent
+	ifconfig $if down || return
+	# delete trunkports
+	ifconfig $if | while read line; do
+		set -- $line
+		case "$1" in
+		trunkport) ifconfig $if -trunkport $2 > /dev/null 2>&1 ;;
+		esac
+	done
+	# If we can, destroy the if
+	ifconfig $if destroy > /dev/null 2>&1 && return
+	# remove all v4 addresses, error means no more to remove
+	while ifconfig $if -alias> /dev/null 2>&1; do :; done
+	# remove all v6 addresses
+	ifconfig $if | while read line; do
+		set -- $line
+		case "$1" in
+		inet6) ifconfig $if inet6 delete $2 >/dev/null 2>&1 ;;
+		esac
+	done
+	# remove groups
+	# -link* stuff, also consider for nfsroot and link specific if's
+
+	# reset to default settings
+	for op in -txpower -bssid -chan "media autoselect" 'nwid ""' -nwkey \
+		'mtu 1500' -description
+#-anycast arp -debug -powersafe \
+#		-pppoeac -pppoesvc -syncdev -syncpeer -tentative -txpower \
+#		-vlandev
+	do
+		ifconfig $if $op > /dev/null 2>&1
+	done
+}
+
 # Start the $1 interface
 ifstart() {
 	if=$1
@@ -34,8 +85,10 @@ ifstart() {
 	if ! isalphanumeric "$if"; then
 		return
 	fi
+	# Do not process the same if twice
+	ifseen $if || return
 
-	file=/etc/hostname.$if
+	file=$(nets_file hostname.$if)
 	if ! [ -f $file ]; then
 		echo "netstart: $file: No such file or directory"
 		return
@@ -47,7 +100,11 @@ ifstart() {
 		chmod -LR o-rwx $file
 		chown -LR root.wheel $file
 	fi
-	if ! ifconfig $if > /dev/null 2>&1; then
+	ifconfig $if > /dev/null 2>&1
+	if [ "$?" == "0" ]; then
+		# Clean the if of any existing addresses
+		teardown $if
+	else
 		# Try to create interface if it does not exist
 		if ! ifconfig $if create > /dev/null 2>&1; then
 			return
@@ -56,20 +113,8 @@ ifstart() {
 
 	# Now parse the hostname.* file
 	while :; do
-		if [ "$cmd2" ]; then
-			# We are carrying over from the 'read dt dtaddr'
-			# last time.
-			set -- $cmd2
-			af="$1" name="$2" mask="$3" bcaddr="$4" ext1="$5" cmd2=
-			# Make sure and get any remaining args in ext2,
-			# like the read below
-			i=1
-			while [ $i -lt 6 -a -n "$1" ]; do shift; let i=i+1; done
-			ext2="$@"
-		else
-			# Read the next line or exit the while loop.
-			read af name mask bcaddr ext1 ext2 || break
-		fi
+		# Read the next line or exit the while loop.
+		read af name mask bcaddr ext1 ext2 || break
 		# $af can be "dhcp", "up", "rtsol", an address family,
 		# commands, or a comment.
 		case "$af" in
@@ -92,7 +137,6 @@ ifstart() {
 			cmd="ifconfig $if $name $mask $bcaddr $ext1 $ext2 up"
 			;;
 		*)
-			read dt dtaddr
 			if [ "$name"  = "alias" ]; then
 				# perform a 'shift' of sorts
 				alias=$name
@@ -103,6 +147,13 @@ ifstart() {
 				ext2=
 			else
 				alias=
+			fi
+			if [ "$name" = "tunnel" ]; then
+				# 'shift' the other way
+				ext1="$mask $bcaddr $ext1"
+				mask=
+				bcaddr=
+				ext2=
 			fi
 			cmd="ifconfig $if $af $alias $name"
 			case "$dt" in
@@ -141,7 +192,7 @@ ifstart() {
 			;;
 		esac
 		eval "$cmd"
-	done < /etc/hostname.$if
+	done < $file
 }
 
 # Start multiple:
@@ -149,13 +200,15 @@ ifstart() {
 #   don't start "$2" interfaces
 ifmstart() {
 	for sif in ${1:-ALL}; do
-		for hn in /etc/hostname.*; do
+		# process both $etc and /etc, duplicates get ignored in ifstart
+		for hn in $etc/hostname.* /etc/hostname.*; do
 			# Strip off /etc/hostname. prefix
 			if=${hn#/etc/hostname.}
+			if=${if#${etc}/hostname.}
 			test "$if" = "*" && continue
-
+	
 			# Skip unwanted ifs
-			s=""
+			s=""	
 			for xf in $2; do
 				test "$xf" = "${if%%[0-9]*}" && s="1" && break
 			done
@@ -169,35 +222,80 @@ ifmstart() {
 	done
 }
 
+# Store if's seen in an array, _ifseen[], and return 1
+# when we are passed "$1" with an if we have already seen
+ifseen() {
+	if=$1
+	for tif in ${_ifseen[@]}
+	do
+		[ "$if" = "$tif" ] && return 1
+	done
+	_ifseen[${#_ifseen[*]}]=$if
+}
+
 # Re-read /etc/rc.conf
 . /etc/rc.conf
 
-# If we were invoked with a list of interface names, just reconfigure these
-# interfaces (or bridges) and return.
 if [ $1x = autobootx ]; then
 	shift
 fi
-if [ $# -gt 0 ]; then
-	while [ $# -gt 0 ]; do
-		ifstart $1
-		shift
-	done
-	return
+
+# if default exists (we have run 'netstart <location>' before), use it
+if [ -d /etc/nets/default -a ! "$1" ]; then
+	set -- "default"
+fi
+# If we are given a 'location' subdir as an argument, over-ride default
+# network configuration file location via $etc
+if [ "$1" -a -d /etc/nets/$1 ]; then
+	etc=/etc/nets/$1
+	# `save' the setup for next reboot
+	if ! [ "$1" = "default" ]; then
+		rm -f /etc/nets/default
+		ln -s $1 /etc/nets/default
+	fi
+	[ -f $etc/rc.conf ] && . $etc/rc.conf
+	shift
+else
+	# setting this permts simpler logic later on
+	etc=/etc
+	# If we are invoked with no args, next reboot should use /etc/ too
+	[ -d /etc/nets/default ] && rm /etc/nets/default
+	# If we were invoked with a list of interface names, just reconfigure
+	# these interfaces (or bridges) and return.
+	if [ $# -gt 0 ]; then
+		while [ $# -gt 0 ]; do
+			ifstart $1
+			shift
+		done
+		return
+	fi
 fi
 
 # Otherwise, process with the complete network initialization.
 
+# Flush routes but do not flush IPSec flows,
+# incase we are processing a 'location', including
+# `back to default' aka 'sh /etc/netstart'
+route -qn flush -inet
+route -qn flush -inet6
+
 # /etc/myname contains my symbolic name
-if [ -f /etc/myname ]; then
-	hostname=`stripcom /etc/myname`
+myname_file=`nets_file myname`
+if [ -f $myname_file ]; then
+	hostname=`stripcom $myname_file`
 	hostname $hostname
 else
 	hostname=`hostname`
 fi
 
+domain_file=`nets_file defaultdomain`
+if [ -f $domain_file ]; then
+	domainname `stripcom $domain_file`
+fi
+
 # Set the address for the loopback interface.  Bringing the interface up,
 # automatically invokes the IPv6 address ::1.
-ifconfig lo0 inet 127.0.0.1/8
+ifconfig lo0 127.0.0.1/8
 
 if ifconfig lo0 inet6 >/dev/null 2>&1; then
 	# IPv6 configurations.
@@ -272,14 +370,16 @@ if [ "$ip6kernel" = "YES" -a "x$rtsolif" != "x" ]; then
 	fi
 fi
 
-# /etc/mygate, if it exists, contains the name of my gateway host
-# that name must be in /etc/hosts.
-[[ -z $dhcpif ]] && stripcom /etc/mygate | while read gw; do
+gate_file=`nets_file mygate`
+# $gate_file, if it exists, contains the address(es) of the
+# default gateway(s).  Use for IPv4 if no interfaces configured
+# via dhcp.  Use for IPv6 if no interfaces configured via rtsol.
+[[ -z $dhcpif ]] && stripcom $gate_file | while read gw; do
 		[[ $gw == @(*:*) ]] && continue
 		route -qn delete default > /dev/null 2>&1
 		route -qn add -host default $gw && break
 done
-[[ -z $rtsolif ]] && stripcom /etc/mygate | while read gw; do
+[[ -z $rtsolif ]] && stripcom $gate_file | while read gw; do
 		[[ $gw == !(*:*) ]] && continue
 		route -qn delete -inet6 default > /dev/null 2>&1
 		route -qn add -host -inet6 default $gw && break
@@ -301,7 +401,7 @@ NO:NO)
 NO:YES)
 	;;
 *:NO)
-	maddr=`if [ "$multicast_host" = "YES" ]; then
+	maddr=`if [ "$multicast_host" = YES ]; then
 		ed -s '!route -qn show -inet' <<EOF
 /^default/p
 EOF

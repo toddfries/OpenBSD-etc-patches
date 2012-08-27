@@ -1,0 +1,151 @@
+#!/bin/sh
+
+prefix=/dev/disks
+conf=/etc/disks.conf
+
+# read stdin for pattern ($1) and remove it from the output
+grepr() {
+	local pat="$1"
+	while read line; do
+		if [[ $line = ${pat}* ]]; then
+			line=${line#${pat}}
+			echo "$line"
+		fi
+	done
+}
+# grep only
+grep() {
+	local pat="$1"
+	while read line; do
+		if [[ $line = ${pat}* ]]; then
+			echo "$line"
+		fi
+	done
+}
+
+get_dkdevs() {
+	local _n _oifs=$IFS
+	IFS=","
+	bsort $(for _n in $(sysctl -n hw.disknames); do dkecho "$_n"; done )
+	IFS=$_oifs
+}
+dkecho() {
+	case "$1" in
+	sd*|wd*) echo "$1";;
+	esac
+}
+bsort() {
+	local _l _a=$1 _b
+
+	[[ $# -gt 0 ]] || return
+
+	shift
+	for _b; do
+		if [[ $_a != $_b ]] ; then
+			if [[ $_a > $_b ]] ; then
+				_l="$_a $_l"; _a=$_b
+			else
+				_l="$_b $_l"
+			fi
+		fi
+	done
+
+	# Output the smallest value found.
+	echo -n "$_a "
+
+	# Sort remaining values.
+	bsort $_l
+}
+# not an exact science, but this is about keeping a line together anyway
+escapespace() {
+	local arg=
+	while read args; do
+		for arg in $args; do
+			echo -n "${arg}_"
+		done
+		echo
+	done
+}
+
+# presume all filesystems are RO, save a disklabel to memory
+savelabel() {
+	local i=0 disk=$1 line=
+	set -A dklabel
+	for line in $(disklabel "$disk" 2> /dev/null | escapespace); do
+		dklabel[$i]="$line"
+		let i=i+1
+	done
+}
+
+# output mirrors disklabel output, spaces collapsed
+showlabel() {
+	local i=0 _oifs="$IFS" a=
+	IFS="_"
+	while [ i -lt ${#dklabel[*]} ]; do
+		for a in ${dklabel[$i]}; do
+			echo -n "$a "
+		done
+		echo
+		let i=i+1
+	done
+	IFS=$_oifs
+}
+newdisk() {
+	local i=0 uuid="$1"
+	if [ -f $conf ]; then
+		while [ "$(grep "*:hd${i}" < $conf)" ]; do
+			let i=i+1
+		done
+	fi
+	name="hd${i}"
+	# attempt to save, if we can't, do so later
+	(echo "$uuid:$name" >> $conf) > /dev/null 2>&1
+}
+
+if [ "$(mount | grep "* on ${prefix}")" ]; then
+	umount ${prefix} || exit
+fi
+ro=0
+if [ "$(mount | grep "* / *read-only")" ]; then
+	ro=1
+fi
+if mount / 2> /dev/null; then
+	rm -rf ${prefix}
+	mkdir ${prefix}
+else
+	mount -t mfs swap ${prefix}
+fi
+
+for d in $(get_dkdevs); do
+	invalid=0
+	savelabel $d
+
+	sectors=$(showlabel | grepr "total sectors: ")
+	[ "$sectors" ] || invalid=1
+
+	uuid="$(showlabel | grepr "label: ")"
+	uuid="${uuid}-$(showlabel | grepr "total sectors: ")"
+	uuid="${uuid}-$(bioctl $d 2> /dev/null | grepr "*, serial ")"
+	echo -n "$d $uuid:"
+	if [ "${uuid}" = "--" ]; then
+		invalid=1
+	fi
+	if [ invalid -gt 0 ]; then
+		echo "<INVALID>"
+		continue
+	fi
+	name=$(cat $conf 2> /dev/null | grepr "${uuid}:")
+	if ! [ "$name" ]; then
+		newdisk "$uuid"
+	fi
+
+	echo $name
+	for slice in a b c d e f g h i j k l m n o p
+	do
+		ln -s /dev/${d}${slice} ${prefix}/${name}${slice} 2> /dev/null
+		ln -s /dev/r${d}${slice} ${prefix}/r${name}${slice} 2> /dev/null
+	done
+done
+if [ ro -gt 0 ]; then
+	mount -o update,ro /
+fi

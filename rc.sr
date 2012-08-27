@@ -1,0 +1,237 @@
+#!/bin/sh
+
+# Copyright (c) 2012 Todd T. Fries <todd@fries.net>
+#
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+# /etc/sr.conf format
+#
+# <targetduid> <srtype> <srcduid.part>[,<srcduid.part>[..]]
+
+. /etc/rc.conf
+
+verbose=0
+
+# conditional sh based grep
+if ! [ -x /usr/bin/grep ]; then
+	grep() {
+		local pat="$1"
+		local notfound=1
+		while read line; do
+			if [[ $line = ${pat}* ]]; then
+				echo "$line"
+				notfound=0
+			fi
+		done
+		return $notfound
+	}
+fi
+stripcom() {
+        local _file="$1"
+        local _line
+
+        {
+                while read _line ; do
+                        _line=${_line%%#*}              # strip comments
+                        test -z "$_line" && continue
+                        echo $_line
+                done
+        } < $_file
+}
+grepstart() {
+	local pat="$1"
+	while read line; do
+		if [[ $line != ${line#${pat}*} ]]; then
+			echo "$line"
+		fi
+	done
+}
+
+log() {
+	if [ verbose -lt 1 ]; then
+		return
+	fi
+	if [ "$1" = "-n" ]; then
+		shift
+		echo -n "$DUID: $@"
+	else
+		echo "$DUID: $@"
+	fi
+}
+scan_diskuids() {
+	local _n _oifs=$IFS
+	IFS=","
+	for _n in $(sysctl -n hw.disknames); do echo "${_n##*:} "; done
+	IFS=$_oifs
+}
+scan_duids() {
+	local _n _oifs=$IFS
+	IFS=","
+	for _n in $@; do echo "${_n%%.*} "; done
+	IFS=$_oifs
+}
+duidexists() {
+	disklabel "$1" > /dev/null 2>&1
+	return $?
+}
+handle_duid() {
+	local duid="$1"
+	log "handle_duid $duid"
+	local allexist j missing=""
+	stripcom /etc/sr.conf | while read targetduid raidlevel bioduids keydisk
+	do
+		if ! [ "targetduid" != "$duid" ]; then
+			continue
+		fi
+		# bail out early if the target duid exists
+		if duidexists "$targetduid"; then
+			log "target $targetduid exists"
+			continue
+		else
+			log "target $targetduid !exists"
+		fi
+		allexist=1
+		for d in $(scan_duids ${bioduids})
+		do
+			log -n "duid $d "
+			if ! duidexists "$d"
+			then
+				log missing
+				allexist=0
+				missing="$missing $d"
+			else
+				log present
+			fi
+		done
+		if [ allexist -eq 1 ]; then
+			local maxcount=1 bcount=0 xtra=""
+			case "$raidlevel" in
+			0|1|5|6)
+				;;
+			C)
+				if ! [ "$keydisk" ]; then
+					echo -n "$targetduid: "
+					maxcount=4
+				else
+					xtra="-k $keydisk "
+				fi
+				;;
+			esac
+			cmd="bioctl -c $raidlevel -l $bioduids ${xtra}softraid0"
+			log "cmd=$cmd"
+                	while [ bcount -lt maxcount ]
+			do
+				log "$cmd"
+				if $cmd; then
+					break
+				fi
+                		let bcount=bcount+1
+                	done
+		else
+			log "not running bioctl, missing $missing"
+		fi
+	done
+}
+handle_attach() {
+	local duid="$1"
+	if ! duidexists $duid; then
+		return
+	fi
+	if [ -x /usr/bin/egrep ]; then
+	sh /etc/rc.fsck $duid
+	for mtpt in $(egrep "^$duid" </etc/fstab|awk '{print $2}')
+	do
+		part=$(egrep "^${duid}\.[a-p][ \t]+${mtpt}[ \t]+" \
+		    /etc/fstab | awk '{print $1}')
+		part=${part#*.}
+		fstype=$(egrep "^${duid}\.${part}[ \t]+${mtpt}[ \t]+" \
+		    /etc/fstab | awk '{print $3}')
+		fsopts=$(egrep "^${duid}\.${part}[ \t]+${mtpt}[ \t]" \
+		    /etc/fstab | awk '{print $4}')
+		idinfo="${duid}: ${part} ${mtpt} ${fstype} ${fsopts}"
+		echo "$idinfo (Processing)"
+		case "$fstype" in
+		ffs)
+     			if [ "$(mount | grep " $mtpt ")" ]; then
+				echo "$mtpt already mounted"
+				#case "$mtpt" in
+				#/home)
+				#	vnconfig svnd0 ~todd/copy/extent0
+				#	(sh /etc/hotplug/attach 2 svnd0 &)
+				#;;
+				#esac
+				continue
+     			fi
+			case "$mtpt" in
+			/var/spool/afs)
+				pkill afsd
+				while pgrep afsd; do sleep 1; pkill afsd; done
+				rm -rf /var/spool/afs/*
+				echo "found $mtpt dev=/dev/r$DEVNAME$part"
+				umount -f /var/spool/afs && \
+				rm -rf /var/spool/afs/*
+				newfs -O2 -m 0 -i 73777 /dev/r$DEVNAME$part
+				mount /var/spool/afs
+				/usr/libexec/afsd $afsd_flags
+				continue
+			;;
+			esac
+			echo "fsck -y $mtpt && mount $mtpt"
+			if time fsck -y $mtpt; then
+				[ -d "$mtpt" ] || continue
+				mount $mtpt
+			fi
+		;;
+		msdos)
+			if [ "$fsopts" ]; then
+				opt="-o $fsopts"
+			else
+				opt=""
+			fi
+			set -x
+			mount $opt /dev/${DEVNAME}$part $mtpt
+			i=0
+			while [ i -lt 60 ]
+			do
+				[ -x ~todd/bin/dumpmedia ] && break
+				sleep 5
+				let i=i+1
+			done
+			set +x
+			su -m todd -c "env PATH=$PATH:~todd/bin \
+			    ~todd/bin/dumpmedia $mtpt"
+			umount $mtpt
+		;;
+		*)
+			echo "${idinfo} (Unhandled)"
+		;;
+		esac
+	done
+	fi
+}
+
+if [ "$1" = "-a" ]; then
+	shift
+	handle_attach "$@"
+	exit $?
+fi
+
+if [ "$1" ]; then
+	duids="$@"
+else
+	duids=$(stripcom /etc/sr.conf|while read line rest; do echo $line; done)
+fi
+for DUID in $duids
+do
+	handle_duid "$DUID"
+done
