@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/ksh
 
 # Copyright (c) 2012 Todd T. Fries <todd@fries.net>
 #
@@ -16,7 +16,7 @@
 
 # /etc/sr.conf format
 #
-# <targetduid> <srtype> <srcduid.part>[,<srcduid.part>[..]]
+# <targetduid> <srtype> <srcduid.part>[,<srcduid.part>[..]] [<keydiskuid.part>]
 
 . /etc/rc.conf
 
@@ -133,6 +133,7 @@ handle_duid() {
 			do
 				log "$cmd"
 				if $cmd; then
+					((attachcount++))
 					break
 				fi
                 		let bcount=bcount+1
@@ -161,56 +162,16 @@ handle_attach() {
 		idinfo="${duid}: ${part} ${mtpt} ${fstype} ${fsopts}"
 		echo "$idinfo (Processing)"
 		case "$fstype" in
-		ffs)
+		ffs|msdos)
      			if [ "$(mount | grep " $mtpt ")" ]; then
 				echo "$mtpt already mounted"
-				#case "$mtpt" in
-				#/home)
-				#	vnconfig svnd0 ~todd/copy/extent0
-				#	(sh /etc/hotplug/attach 2 svnd0 &)
-				#;;
-				#esac
 				continue
      			fi
-			case "$mtpt" in
-			/var/spool/afs)
-				pkill afsd
-				while pgrep afsd; do sleep 1; pkill afsd; done
-				rm -rf /var/spool/afs/*
-				echo "found $mtpt dev=/dev/r$DEVNAME$part"
-				umount -f /var/spool/afs && \
-				rm -rf /var/spool/afs/*
-				newfs -O2 -m 0 -i 73777 /dev/r$DEVNAME$part
-				mount /var/spool/afs
-				/usr/libexec/afsd $afsd_flags
-				continue
-			;;
-			esac
 			echo "fsck -y $mtpt && mount $mtpt"
 			if time fsck -y $mtpt; then
 				[ -d "$mtpt" ] || continue
 				mount $mtpt
 			fi
-		;;
-		msdos)
-			if [ "$fsopts" ]; then
-				opt="-o $fsopts"
-			else
-				opt=""
-			fi
-			set -x
-			mount $opt /dev/${DEVNAME}$part $mtpt
-			i=0
-			while [ i -lt 60 ]
-			do
-				[ -x ~todd/bin/dumpmedia ] && break
-				sleep 5
-				let i=i+1
-			done
-			set +x
-			su -m todd -c "env PATH=$PATH:~todd/bin \
-			    ~todd/bin/dumpmedia $mtpt"
-			umount $mtpt
 		;;
 		*)
 			echo "${idinfo} (Unhandled)"
@@ -225,13 +186,20 @@ if [ "$1" = "-a" ]; then
 	handle_attach "$@"
 	exit $?
 fi
-
 if [ "$1" ]; then
 	duids="$@"
 else
 	duids=$(stripcom /etc/sr.conf|while read line rest; do echo $line; done)
 fi
-for DUID in $duids
+
+attachcount=0
+oldattachcount=1
+
+while [ attachcount -ne oldattachcount ]
 do
-	handle_duid "$DUID"
+	oldattachcount=attachcount
+	for DUID in $duids
+	do
+		handle_duid "$DUID"
+	done
 done
