@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.319 2012/06/20 18:33:58 matthew Exp $
+#	$OpenBSD: Makefile,v 1.322 2012/08/23 07:02:49 todd Exp $
 
 TZDIR=		/usr/share/zoneinfo
 LOCALTIME=	Canada/Mountain
@@ -55,7 +55,7 @@ RCDAEMONS=	amd apmd bgpd bootparamd cron dhcpd dhcrelay dvmrpd \
 		route6d rtadvd rtsold rwhod sasyncd sendmail sensorsd smtpd \
 		snmpd spamd sshd syslogd unbound watchdogd wsmoused xdm ypbind \
 		ypldap yppasswdd ypserv kdc kadmind kpasswdd nfsd mountd lockd \
-		statd spamlogd sndiod popa3d tftpd
+		statd spamlogd sndiod popa3d tftpd tftpproxy
 
 MISETS=	base${OSrev}.tgz comp${OSrev}.tgz \
 	man${OSrev}.tgz game${OSrev}.tgz etc${OSrev}.tgz
@@ -190,17 +190,6 @@ distribution-etc-root-var: distrib-dirs
 		    ${DESTDIR}/etc/ppp; \
 		${INSTALL} -c -o root -g wheel -m 644 ppp.secret.sample \
 		    ${DESTDIR}/etc/ppp
-	cd afs; \
-		${INSTALL} -c -o root -g wheel -m 644 afsd.conf \
-		    ${DESTDIR}/etc/afs; \
-		${INSTALL} -c -o root -g wheel -m 644 ThisCell \
-		    ${DESTDIR}/etc/afs; \
-		${INSTALL} -c -o root -g wheel -m 644 CellServDB \
-		    ${DESTDIR}/etc/afs; \
-		${INSTALL} -c -o root -g wheel -m 644 SuidCells \
-		    ${DESTDIR}/etc/afs; \
-		${INSTALL} -c -o root -g wheel -m 644 README \
-		    ${DESTDIR}/etc/afs
 	cd systrace; \
 		${INSTALL} -c -o root -g wheel -m 600 usr_sbin_lpd \
 		    ${DESTDIR}/etc/systrace; \
@@ -353,9 +342,9 @@ update-moduli:
 	bootblocks ${ALL_KERNELS}
 	
 
-SUBDIR+= etc.alpha etc.amd64 etc.armish etc.aviion etc.hp300 etc.hppa
-SUBDIR+= etc.hppa64 etc.i386 etc.landisk etc.loongson etc.luna88k 
-SUBDIR+= etc.macppc etc.mvme68k etc.mvme88k etc.palm 
+SUBDIR+= etc.alpha etc.amd64 etc.armish etc.aviion etc.beagle etc.hp300
+SUBDIR+= etc.hppa etc.hppa64 etc.i386 etc.landisk etc.loongson etc.luna88k 
+SUBDIR+= etc.macppc etc.mvme68k etc.mvme88k etc.palm
 SUBDIR+= etc.sgi etc.socppc etc.sparc etc.sparc64 etc.vax etc.zaurus
 
 .include <bsd.subdir.mk>
