@@ -1,4 +1,4 @@
-#	$OpenBSD: rc,v 1.397 2011/12/09 14:52:26 ratchov Exp $
+#	$OpenBSD: rc,v 1.402 2012/08/26 19:25:19 ajacoutot Exp $
 
 # System startup script run by init on autoboot
 # or after single-user.
@@ -264,16 +264,6 @@ if [ X"$1" = X"shutdown" ]; then
 	exit 0
 fi
 
-# Configure raid devices.
-for dev in 0 1 2 3; do
-	if [ -f /etc/raid$dev.conf ]; then
-		raidctl -c /etc/raid$dev.conf raid$dev
-	fi
-done
-
-# Check parity on raid devices.
-raidctl -P all
-
 swapctl -A -t blk
 
 if [ -e /fastboot ]; then
@@ -407,11 +397,11 @@ if [ X"${ipsec}" != X"NO" ]; then
 fi
 
 echo -n 'starting RPC daemons:'
-start_daemon portmap
+start_daemon portmap ypldap
 if [ X"`domainname`" != X"" ]; then
 	start_daemon ypserv ypbind yppasswdd
 fi
-start_daemon ypldap mountd nfsd lockd statd amd
+start_daemon mountd nfsd lockd statd amd
 echo '.'
 
 mount -a
@@ -503,9 +493,9 @@ if ifconfig lo0 inet6 >/dev/null 2>&1; then
 	fi
 fi
 
-start_daemon hostapd rwhod lpd sendmail smtpd httpd ftpd ftpproxy
-start_daemon identd inetd rarpd bootparamd rbootd mopd popa3d
-start_daemon spamd spamlogd kdc kadmind kpasswdd sndiod
+start_daemon hostapd rwhod lpd sendmail smtpd httpd nginx ftpd ftpproxy
+start_daemon tftpd tftpproxy identd inetd rarpd bootparamd rbootd mopd
+start_daemon popa3d spamd spamlogd kdc kadmind kpasswdd sndiod
 echo '.'
 
 if [ X"${spamd_flags}" != X"NO" ]; then

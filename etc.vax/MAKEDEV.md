@@ -1,6 +1,6 @@
 define(MACHINE,vax)dnl
 vers(__file__,
-	{-$OpenBSD: MAKEDEV.md,v 1.47 2011/10/22 19:31:23 miod Exp $-},
+	{-$OpenBSD: MAKEDEV.md,v 1.49 2012/08/23 06:15:28 deraadt Exp $-},
 etc.MACHINE)dnl
 dnl
 dnl Copyright (c) 2001-2006 Todd T. Fries <todd@OpenBSD.org>
@@ -92,7 +92,6 @@ _TITLE(dis)
 _DEV(cd, 61, 22)
 _DEV(hd, 58, 19)
 _DEV(ra, 9, 9)
-_DEV(raid, 73, 25)
 _DEV(rd, 62, 23)
 _DEV(rx, 30, 12)
 _DEV(sd, 59, 20)
@@ -124,7 +123,6 @@ _DEV(bpf, 56)
 _DEV(diskmap, 79)
 _DEV(fdesc, 53)
 _DEV(lkm, 28)
-_DEV(nnpfs, 74)
 _DEV(pf, 42)
 _DEV(pppx, 80)
 _DEV(rnd, 67)
@@ -178,7 +176,6 @@ dnl *** vax specific targets
 dnl
 twrget(all, au, audio, 0)
 target(all, ch, 0)dnl
-target(all, nnpfs, 0)dnl
 target(all, vscsi, 0)dnl
 target(all, diskmap)dnl
 target(all, pty, 0)dnl

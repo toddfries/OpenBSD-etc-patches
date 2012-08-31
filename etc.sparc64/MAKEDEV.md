@@ -1,6 +1,6 @@
 define(MACHINE,sparc64)dnl
 vers(__file__,
-	{-$OpenBSD: MAKEDEV.md,v 1.64 2011/10/22 19:31:23 miod Exp $-},
+	{-$OpenBSD: MAKEDEV.md,v 1.66 2012/08/23 06:15:28 deraadt Exp $-},
 etc.MACHINE)dnl
 dnl
 dnl Copyright (c) 2001-2006 Todd T. Fries <todd@OpenBSD.org>
@@ -54,7 +54,6 @@ _DEV(local)
 _TITLE(dis)
 _DEV(cd, 58, 18)
 _DEV(flo, 54, 16)
-_DEV(raid, 121, 25)
 _DEV(rd, 61, 5)
 _DEV(sd, 17, 7)
 _DEV(vnd, 110, 8)
@@ -107,7 +106,6 @@ _DEV(diskmap, 130)
 _DEV(fdesc, 24)
 _DEV(hotplug, 124)
 _DEV(lkm, 112)
-_DEV(nnpfs, 51)
 _DEV(oppr)
 _DEV(pci, 52)
 _DEV(pf, 73)
@@ -144,7 +142,6 @@ twrget(wscons, wscons, ttyI, cfg, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, a, b)dnl
 twrget(wscons, wscons, ttyJ, cfg, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, a, b)dnl
 twrget(all, au, audio, 0, 1, 2)dnl
 target(all, ch, 0)dnl
-target(all, nnpfs, 0)dnl
 target(all, vscsi, 0)dnl
 target(all, diskmap)dnl
 twrget(all, flo, fd, 0, 0B, 0C, 0D, 0E, 0F, 0G, 0H)dnl

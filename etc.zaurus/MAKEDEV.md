@@ -1,6 +1,6 @@
 define(MACHINE,zaurus)dnl
 vers(__file__,
-	{-$OpenBSD: MAKEDEV.md,v 1.29 2011/10/06 20:49:27 deraadt Exp $-},
+	{-$OpenBSD: MAKEDEV.md,v 1.31 2012/08/23 06:15:28 deraadt Exp $-},
 etc.MACHINE)dnl
 dnl
 dnl Copyright (c) 2001-2004 Todd T. Fries <todd@OpenBSD.org>
@@ -35,7 +35,6 @@ _DEV(local)
 _TITLE(dis)
 _DEV(cd, 26, 26)
 _DEV(ch, 27)
-_DEV(raid, 71, 71)
 _DEV(rd, 18, 18)
 _DEV(sd, 24, 24)
 _DEV(vnd, 19, 19)
@@ -78,7 +77,6 @@ _DEV(fdesc, 7)
 _DEV(hotplug, 37)
 _DEV(lkm, 35)
 _DEV(music, 58)
-_DEV(nnpfs, 51)
 _DEV(pf, 46)
 _DEV(pppx, 103)
 _DEV(radio, 97)
@@ -104,7 +102,6 @@ dnl
 dnl *** zaurus specific targets
 dnl
 target(all, ch, 0)dnl
-target(all, nnpfs, 0)dnl
 target(all, vscsi, 0)dnl
 target(all, diskmap)dnl
 target(all, bio)dnl
