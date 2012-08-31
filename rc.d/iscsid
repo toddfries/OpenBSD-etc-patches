@@ -1,0 +1,37 @@
+#!/bin/sh
+#
+# $OpenBSD: route6d,v 1.1 2011/07/06 18:55:36 robert Exp $
+
+daemon="/usr/sbin/iscsid"
+
+. /etc/rc.d/rc.subr
+
+rc_reload() {
+	rcexec "/usr/sbin/iscsictl reload"
+}
+
+rc_start() {
+	if [ -f /etc/iscsi.conf ]; then
+        	/usr/sbin/iscsid -d 2>&1 | logger -p daemon.info -t iscsid 2>&1 &
+        	while ! [ -S /var/run/iscsid.sock ]; do sleep .1; done
+		sleep 1
+        	/usr/sbin/iscsictl reload
+		i=0
+		disknames=$(sysctl -n hw.disknames)
+		while :
+		do
+			let i=i+1
+			sleep 5
+			newdisk=$(sysctl -n hw.disknames)
+			[ "$newdisk" = "$disknames" ] && break
+			disknames="$newdisk"
+        		if ! pgrep iscsid > /dev/null 2>&1; then
+				break
+        		fi
+		done
+		renice -n -18 $(pgrep iscsid)
+		sh /etc/rc.fsck | logger -p daemon.info -t fsck 2>&1
+	fi
+}
+
+rc_cmd $1
