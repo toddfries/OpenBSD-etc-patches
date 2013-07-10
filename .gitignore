@@ -6,3 +6,4 @@
 CVS
 obj
 sync.sh
+obj.*.*

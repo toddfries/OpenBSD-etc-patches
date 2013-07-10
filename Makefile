@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.331 2013/03/31 21:46:53 espie Exp $
+#	$OpenBSD: Makefile,v 1.333 2013/07/10 05:12:15 ajacoutot Exp $
 
 TZDIR=		/usr/share/zoneinfo
 LOCALTIME=	Canada/Mountain
@@ -53,10 +53,10 @@ RCDAEMONS=	amd apmd bgpd bootparamd cron dhcpd dhcrelay dvmrpd \
 		inetd isakmpd ldapd npppd ldattach ldpd lpd mopd mrouted \
 		named nginx nsd ntpd ospfd ospf6d portmap pflogd rarpd rbootd \
 		relayd ripd route6d rtadvd rtsold rwhod sasyncd sendmail \
-		sensorsd smtpd snmpd spamd sshd syslogd watchdogd wsmoused \
-		xdm ypbind ypldap yppasswdd ypserv kdc kadmind kpasswdd nfsd \
-		mountd lockd statd spamlogd sndiod popa3d tftpd tftpproxy \
-		ldomd
+		sensorsd slowcgi smtpd snmpd spamd sshd syslogd watchdogd \
+		wsmoused xdm ypbind ypldap yppasswdd ypserv kdc kadmind \
+		kpasswdd nfsd mountd lockd statd spamlogd sndiod popa3d \
+		tftpd tftpproxy ldomd
 
 MISETS=	base${OSrev}.tgz comp${OSrev}.tgz \
 	man${OSrev}.tgz game${OSrev}.tgz etc${OSrev}.tgz
@@ -167,8 +167,6 @@ distribution-etc-root-var: distrib-dirs
 		${INSTALL} -c -o root -g wheel -m 600 /dev/null \
 		    ${DESTDIR}/etc/skel/.ssh/authorized_keys
 	cd kerberosV; \
-		${INSTALL} -c -o root -g wheel -m 644 README \
-		    ${DESTDIR}/etc/kerberosV; \
 		${INSTALL} -c -o root -g wheel -m 644 krb5.conf.example \
 		    ${DESTDIR}/etc/kerberosV
 	cd amd; \
