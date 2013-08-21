@@ -1,4 +1,4 @@
-#	$OpenBSD: ftpusers,v 1.44 2012/10/12 19:34:51 dcoppa Exp $
+#	$OpenBSD: ftpusers,v 1.46 2013/08/19 16:31:18 ajacoutot Exp $
 #
 # list of users disallowed any ftp access.
 # read by ftpd(8).
@@ -21,8 +21,6 @@ _rusersd
 _fingerd
 _x11
 _spamd
-_kdc
-_kadmin
 _isakmpd
 _syslogd
 _pflogd
@@ -32,7 +30,6 @@ _dhcp
 _mopd
 _tftpd
 _rbootd
-_afs
 _ppp
 _ntp
 _ftp
@@ -45,7 +42,6 @@ _ospf6d
 _snmpd
 _rtadvd
 _ypldap
-_btd
 _smtpd
 _rwalld
 _nsd
