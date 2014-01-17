@@ -1,4 +1,4 @@
-#	$OpenBSD: 4.4BSD.dist,v 1.237 2013/10/18 13:58:18 miod Exp $
+#	$OpenBSD: 4.4BSD.dist,v 1.241 2014/01/08 21:52:22 deraadt Exp $
 
 /set type=dir uname=root gname=wheel mode=0755
 # .
@@ -219,10 +219,16 @@ sliphome
 # ./etc/sliphome
 ..
 
+# ./etc/signify
+signify
+# ./etc/signify
+..
+
 # ./etc/ssh
 ssh
 # ./etc/ssh
 ..
+
 
 # ./etc/ssl
 ssl
@@ -266,11 +272,6 @@ root		mode=0700
 # ./sbin
 sbin
 # ./sbin
-..
-
-# ./stand
-stand
-# ./stand
 ..
 
 # ./tmp
@@ -1303,7 +1304,7 @@ tmp		uname=root gname=named mode=0775
 nsd
 
 # ./var/nsd/db
-db		uname=root gname=wheel mode=0755
+db		uname=root gname=_nsd mode=0775
 # ./var/nsd/db
 ..
 
@@ -1312,8 +1313,19 @@ dev
 # ./var/nsd/dev
 ..
 
+# ./var/nsd/etc
+etc		uname=root gname=_nsd mode=0750
+# ./var/nsd/etc
+..
+
 # ./var/nsd/run
 run		uname=root gname=_nsd mode=0775
+
+# ./var/nsd/run/xfr
+xfr		uname=root gname=_nsd mode=0770
+# ./var/nsd/run/xfr
+..
+
 # ./var/nsd/run
 ..
 
@@ -1324,11 +1336,6 @@ zones		uname=root gname=wheel mode=0755
 
 # ./var/nsd
 ..
-
-# ./var/obj				XXX
-#obj
-# ./var/obj				XXX
-#..
 
 # ./var/quotas
 quotas            gname=operator mode=0750

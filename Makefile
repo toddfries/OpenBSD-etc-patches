@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.337 2013/11/03 18:28:34 deraadt Exp $
+#	$OpenBSD: Makefile,v 1.343 2014/01/10 14:06:18 deraadt Exp $
 
 TZDIR=		/usr/share/zoneinfo
 LOCALTIME=	Canada/Mountain
@@ -55,7 +55,7 @@ RCDAEMONS=	amd apmd bgpd bootparamd cron dhcpd dhcrelay dvmrpd \
 		relayd ripd route6d rtadvd rtsold rwhod sasyncd sendmail \
 		sensorsd slowcgi smtpd snmpd spamd sshd syslogd watchdogd \
 		wsmoused xdm ypbind ypldap yppasswdd ypserv kdc kadmind \
-		kpasswdd nfsd mountd lockd statd spamlogd sndiod popa3d \
+		kpasswdd nfsd mountd lockd statd spamlogd sndiod \
 		tftpd tftpproxy ldomd ipropd_master ipropd_slave
 
 MISETS=	base${OSrev}.tgz comp${OSrev}.tgz \
@@ -130,7 +130,7 @@ distribution-etc-root-var: distrib-dirs
 	${INSTALL} -c -o root -g wheel -m 600 snmpd.conf ${DESTDIR}/etc
 	${INSTALL} -c -o root -g wheel -m 600 ldapd.conf ${DESTDIR}/etc
 	${INSTALL} -c -o root -g wheel -m 600 ypldap.conf ${DESTDIR}/etc
-	${INSTALL} -c -o root -g _nsd -m 640 nsd.conf ${DESTDIR}/etc
+	${INSTALL} -c -o root -g _nsd -m 640 nsd.conf ${DESTDIR}/var/nsd/etc
 	${INSTALL} -c -o ${BINOWN} -g ${BINGRP} -m 555 \
 	    etc.${MACHINE}/MAKEDEV ${DESTDIR}/dev
 	cd root; \
@@ -193,6 +193,9 @@ distribution-etc-root-var: distrib-dirs
 		    ${DESTDIR}/etc/ppp; \
 		${INSTALL} -c -o root -g wheel -m 644 ppp.secret.sample \
 		    ${DESTDIR}/etc/ppp
+	cd signify; \
+		${INSTALL} -c -o root -g wheel -m 644 *.pub \
+		    ${DESTDIR}/etc/signify
 	cd systrace; \
 		${INSTALL} -c -o root -g wheel -m 600 usr_sbin_lpd \
 		    ${DESTDIR}/etc/systrace; \
@@ -302,6 +305,7 @@ release:
 .else
 
 release-sets:
+	cd ${RELEASEDIR} && rm -f SHA256
 	cd ../distrib/sets && exec ${SUDO} sh maketars ${OSrev}
 
 sha:

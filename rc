@@ -1,4 +1,4 @@
-#	$OpenBSD: rc,v 1.407 2013/08/09 16:24:54 ajacoutot Exp $
+#	$OpenBSD: rc,v 1.419 2014/01/03 23:24:19 millert Exp $
 
 # System startup script run by init on autoboot
 # or after single-user.
@@ -101,16 +101,16 @@ wsconsctl_conf()
 
 random_seed()
 {
-	if [ -f /var/db/host.random ]; then
-		dd if=/var/db/host.random of=/dev/arandom bs=65536 count=1 \
-		    > /dev/null 2>&1
-		chmod 600 /var/db/host.random >/dev/null 2>&1
-
-		# reset seed file, so that if a shutdown-less reboot occurs,
-		# the next seed is not a repeat
-		dd if=/dev/arandom of=/var/db/host.random bs=65536 count=1 \
-		    > /dev/null 2>&1
-	fi
+	{
+		# push the old seed into the kernel
+		dd if=/var/db/host.random of=/dev/random bs=65536 count=1
+		chmod 600 /var/db/host.random
+		# ... and create a future seed
+		dd if=/dev/random of=/var/db/host.random bs=65536 count=1
+		# and create a seed file for the boot-loader
+		dd if=/dev/random of=/etc/random.seed bs=512 count=1
+		chmod 600 /etc/random.seed
+	} > /dev/null 2>&1
 }
 
 fill_baddynamic()
@@ -230,36 +230,36 @@ fi
 . /etc/rc.conf
 
 if [ X"$1" = X"shutdown" ]; then
-	dd if=/dev/arandom of=/var/db/host.random bs=65536 count=1 >/dev/null 2>&1
-	chmod 600 /var/db/host.random >/dev/null 2>&1
-	_c=$?
-	if [ ${_c} -eq 0 -a -n "${pkg_scripts}" ]; then
-		echo -n 'stopping package daemons:'
-		while [ -n "${pkg_scripts}" ]; do
-			_r=${pkg_scripts##* }
-			pkg_scripts=${pkg_scripts%%*( )${_r}}
-			[ -x /etc/rc.d/${_r} ] && /etc/rc.d/${_r} stop
-		done
-		echo '.'
-	fi
-	if [ ${_c} -eq 0 -a -f /etc/rc.shutdown ]; then
+	random_seed
+
+	# If we are in secure level 0, assume single user mode.
+	if [ `sysctl -n kern.securelevel` -ne 0 ]; then
+		if [ -n "${pkg_scripts}" ]; then
+			echo -n 'stopping package daemons:'
+			while [ -n "${pkg_scripts}" ]; do
+				_r=${pkg_scripts##* }
+				pkg_scripts=${pkg_scripts%%*( )${_r}}
+				[ -x /etc/rc.d/${_r} ] && /etc/rc.d/${_r} stop
+			done
+			echo '.'
+		fi
+
 		echo /etc/rc.shutdown in progress...
 		. /etc/rc.shutdown
 		echo /etc/rc.shutdown complete.
-
-		# bring carp interfaces down gracefully
-		ifconfig | while read a b; do
-			case $a in
-			carp+([0-9]):) ifconfig ${a%:} down ;;
-			esac
-		done
-
-		if [ X"${powerdown}" = X"YES" ]; then
-			exit 2
-		fi
-
 	else
-		echo single user: not running /etc/rc.shutdown
+		echo single user: not running shutdown scripts
+	fi
+
+	# bring carp interfaces down gracefully
+	ifconfig | while read a b; do
+		case $a in
+		carp+([0-9]):) ifconfig ${a%:} down ;;
+		esac
+	done
+
+	if [ X"${powerdown}" = X"YES" ]; then
+		exit 2
 	fi
 	exit 0
 fi
@@ -358,7 +358,7 @@ if [ -f /etc/resolv.conf.save ]; then
 	touch /etc/resolv.conf
 fi
 . /etc/netstart
-echo rekey > /dev/arandom	# any write triggers an RC4 rekey
+dmesg > /dev/random	# any write triggers an RC4 rekey
 
 if [ X"${pf}" != X"NO" ]; then
 	if [ -f ${pf_rules} ]; then
@@ -495,13 +495,9 @@ fi
 
 start_daemon hostapd rwhod lpd sendmail smtpd httpd slowcgi nginx ftpd
 start_daemon ftpproxy tftpd tftpproxy identd inetd rarpd bootparamd
-start_daemon rbootd mopd popa3d spamd spamlogd kdc kadmind kpasswdd
+start_daemon rbootd mopd spamd spamlogd kdc kadmind kpasswdd
 start_daemon ipropd_master ipropd_slave sndiod
 echo '.'
-
-if [ X"${spamd_flags}" != X"NO" ]; then
-	/usr/libexec/spamd-setup -D
-fi
 
 # If rc.firstime exists, run it just once, and make sure it is deleted
 if [ -f /etc/rc.firsttime ]; then
@@ -515,7 +511,11 @@ rm -f /etc/rc.firsttime.run
 if [ -n "${pkg_scripts}" ]; then
 	echo -n 'starting package daemons:'
 	for _r in $pkg_scripts; do
-		[ -x /etc/rc.d/${_r} ] && start_daemon ${_r}
+		if [ -x /etc/rc.d/${_r} ]; then
+			start_daemon ${_r}
+		else
+			echo -n " ${_r}(absent)"
+		fi
 	done
 	echo '.'
 fi
