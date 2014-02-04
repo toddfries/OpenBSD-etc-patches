@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.343 2014/01/10 14:06:18 deraadt Exp $
+#	$OpenBSD: Makefile,v 1.345 2014/01/25 20:23:53 deraadt Exp $
 
 TZDIR=		/usr/share/zoneinfo
 LOCALTIME=	Canada/Mountain
@@ -177,8 +177,6 @@ distribution-etc-root-var: distrib-dirs
 		    ${DESTDIR}/etc/ppp; \
 		${INSTALL} -c -o root -g wheel -m 600 options \
 		    ${DESTDIR}/etc/ppp; \
-		${INSTALL} -c -o root -g wheel -m 600 options.leaf \
-		    ${DESTDIR}/etc/ppp; \
 		${INSTALL} -c -o root -g wheel -m 600 options.sample \
 		    ${DESTDIR}/etc/ppp; \
 		${INSTALL} -c -o root -g wheel -m 600 chatscript.sample \
@@ -310,7 +308,8 @@ release-sets:
 
 sha:
 	-cd ${RELEASEDIR}; \
-	    sum -a sha256 INSTALL.`arch -ks` ${ALL_KERNELS} ${MDEXT} ${MISETS} > SHA256
+	    sum -a sha256 INSTALL.`arch -ks` \
+	    ${ALL_KERNELS} ${MDEXT} ${MISETS} | sort > SHA256
 
 release: sha
 sha: distrib
