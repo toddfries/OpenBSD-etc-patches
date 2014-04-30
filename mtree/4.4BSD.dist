@@ -1,4 +1,4 @@
-#	$OpenBSD: 4.4BSD.dist,v 1.241 2014/01/08 21:52:22 deraadt Exp $
+#	$OpenBSD: 4.4BSD.dist,v 1.247 2014/04/22 10:24:29 reyk Exp $
 
 /set type=dir uname=root gname=wheel mode=0755
 # .
@@ -157,11 +157,6 @@ ufqdn		uname=root mode=0755
 # ./etc/isakmpd
 ..
 
-# ./etc/kerberosV
-kerberosV
-# ./etc/kerberosV
-..
-
 # ./etc/ldap
 ldap
 
@@ -312,27 +307,6 @@ std             gname=bin uname=root mode=0755
 # ./usr/include/g++
 ..
 
-# ./usr/include/kerberosV
-kerberosV		gname=bin uname=root mode=0755
-
-# ./usr/include/kerberosV/gssapi
-gssapi			gname=bin uname=root mode=0755
-# ./usr/include/kerberosV/gssapi
-..
-
-# ./usr/include/kerberosV/kadm5
-kadm5			gname=bin uname=root mode=0755
-# ./usr/include/kerberosV/kadm5
-..
-
-# ./usr/include/kerberosV/krb5
-krb5			gname=bin uname=root mode=0755
-# ./usr/include/kerberosV/krb5
-..
-
-# ./usr/include/kerberosV
-..
-
 # ./usr/include/libmilter
 libmilter		gname=bin uname=root mode=0755
 # ./usr/include/libmilter
@@ -373,29 +347,6 @@ rpcsvc		gname=bin uname=root mode=0755
 
 # ./usr/lib
 lib
-
-# ./usr/lib/apache
-apache		gname=bin uname=root mode=0755
-
-
-# ./usr/lib/apache/modules
-modules		gname=bin uname=root mode=0755
-# ./usr/lib/apache/modules
-..
-
-# ./usr/lib/apache/include
-include		gname=bin uname=root mode=0755
-
-# ./usr/lib/apache/include/xml
-xml		gname=bin uname=root mode=0755
-# ./usr/lib/apache/include/xml
-..
-
-# ./usr/lib/apache/include
-..
-
-# ./usr/lib/apache
-..
 
 # ./usr/lib/debug
 debug		gname=bin uname=root mode=0755
@@ -682,53 +633,6 @@ milter
 # ./usr/share/doc/html/milter
 ..
 
-# ./usr/share/doc/html/httpd
-httpd  type=dir uname=root gname=wheel mode=755
-
-# ./usr/share/doc/html/httpd/mod
-mod  type=dir uname=root gname=wheel mode=755
-
-# ./usr/share/doc/html/httpd/mod/mod_ssl
-mod_ssl  type=dir uname=root gname=wheel mode=755
-# ./usr/share/doc/html/httpd/mod/mod_ssl
-..
-
-# ./usr/share/doc/html/httpd/mod
-..
-
-# ./usr/share/doc/html/httpd/images
-images  type=dir uname=root gname=wheel mode=755
-# ./usr/share/doc/html/httpd/images
-..
-
-# ./usr/share/doc/html/httpd/vhosts
-vhosts  type=dir uname=root gname=wheel mode=755
-# ./usr/share/doc/html/httpd/vhosts
-..
-
-# ./usr/share/doc/html/httpd/misc
-misc  type=dir uname=root gname=wheel mode=755
-# ./usr/share/doc/html/httpd/misc
-..
-
-# ./usr/share/doc/html/httpd/search
-search  type=dir uname=root gname=wheel mode=755
-# ./usr/share/doc/html/httpd/search
-..
-
-# ./usr/share/doc/html/httpd/howto
-howto  type=dir uname=root gname=wheel mode=755
-# ./usr/share/doc/html/httpd/howto
-..
-
-# ./usr/share/doc/html/httpd/programs
-programs  type=dir uname=root gname=wheel mode=755
-# ./usr/share/doc/html/httpd/programs
-..
-
-# ./usr/share/doc/html/httpd
-..
-
 # ./usr/share/doc/html
 ..
 
@@ -853,8 +757,6 @@ armv7
 ..
 aviion
 ..
-hp300
-..
 hppa
 ..
 i386
@@ -866,10 +768,6 @@ loongson
 luna88k
 ..
 macppc
-..
-mvme68k
-..
-mvme88k
 ..
 octeon
 ..
@@ -937,8 +835,6 @@ armv7
 ..
 aviion
 ..
-hp300
-..
 hppa
 ..
 hppa64
@@ -952,10 +848,6 @@ loongson
 luna88k
 ..
 macppc
-..
-mvme68k
-..
-mvme88k
 ..
 octeon
 ..
@@ -1243,11 +1135,6 @@ phantasia        uname=root gname=games mode=0775
 # ./var/games
 ..
 
-# ./var/kerberosV
-kerberosV	uname=root gname=wheel mode=0700
-# ./var/kerberosV
-..
-
 # ./var/log
 log
 
@@ -1436,6 +1323,27 @@ vi.recover	 mode=01777
 # ./var/tmp
 ..
 
+# ./var/unbound
+unbound
+
+# ./var/unbound/dev
+dev		uname=root gname=wheel mode=0755
+# ./var/unbound/dev
+..
+
+# ./var/unbound/etc
+etc		uname=root gname=wheel mode=0755
+# ./var/unbound/etc
+..
+
+# ./var/unbound/db
+db		uname=root gname=_unbound mode=0775
+# ./var/unbound/db
+..
+
+# ./var/unbound
+..
+
 # ./www
 www type=dir uname=root gname=daemon mode=755
 
@@ -1449,17 +1357,6 @@ cache type=dir uname=www gname=daemon mode=1700
 dev type=dir uname=root gname=daemon mode=755
 
 # ./www
-..
-
-# ./www/icons
-icons  type=dir uname=root gname=daemon mode=755
-
-# ./www/icons/small
-small  type=dir uname=root gname=daemon mode=755
-# ./www/icons/small
-..
-
-# ./www/icons
 ..
 
 #./www/cgi-bin
@@ -1480,24 +1377,8 @@ logs  type=dir uname=root gname=daemon mode=755
 
 #./www/conf
 conf  type=dir uname=root gname=daemon mode=755
-#./www/conf
-
-#./www/conf/modules
-modules  type=dir uname=root gname=daemon mode=755
-#./www/conf/modules
-..
-
-#./www/conf/modules.sample
-modules.sample  type=dir uname=root gname=daemon mode=755
-#./www/conf/modules.sample
-..
 
 #./www/conf
-..
-
-#./www/users
-users  type=dir uname=root gname=daemon mode=755
-#./www/users
 ..
 
 #./www/bin

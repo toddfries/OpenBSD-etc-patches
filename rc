@@ -1,4 +1,4 @@
-#	$OpenBSD: rc,v 1.421 2014/02/19 21:47:15 schwarze Exp $
+#	$OpenBSD: rc,v 1.427 2014/04/25 17:59:53 bluhm Exp $
 
 # System startup script run by init on autoboot
 # or after single-user.
@@ -101,16 +101,14 @@ wsconsctl_conf()
 
 random_seed()
 {
-	{
-		# push the old seed into the kernel
-		dd if=/var/db/host.random of=/dev/random bs=65536 count=1
-		chmod 600 /var/db/host.random
-		# ... and create a future seed
-		dd if=/dev/random of=/var/db/host.random bs=65536 count=1
-		# and create a seed file for the boot-loader
-		dd if=/dev/random of=/etc/random.seed bs=512 count=1
-		chmod 600 /etc/random.seed
-	} > /dev/null 2>&1
+	# push the old seed into the kernel
+	dd if=/var/db/host.random of=/dev/random bs=65536 count=1 status=none
+	chmod 600 /var/db/host.random
+	# ... and create a future seed
+	dd if=/dev/random of=/var/db/host.random bs=65536 count=1 status=none
+	# and create a seed file for the boot-loader
+	dd if=/dev/random of=/etc/random.seed bs=512 count=1 status=none
+	chmod 600 /etc/random.seed
 }
 
 fill_baddynamic()
@@ -336,13 +334,14 @@ if [ X"${pf}" != X"NO" ]; then
 		RULES="$RULES\npass out inet6 proto udp from any port dhcpv6-client to any port dhcpv6-server"
 		RULES="$RULES\npass in inet6 proto udp from any port dhcpv6-server to any port dhcpv6-client"
 	fi
-	RULES="$RULES\npass proto carp keep state (no-sync)"
+	RULES="$RULES\npass in proto carp keep state (no-sync)"
+	RULES="$RULES\npass out proto carp !received-on any keep state (no-sync)"
 	case `sysctl vfs.mounts.nfs 2>/dev/null` in
 	*[1-9]*)
 		# don't kill NFS
 		RULES="set reassemble yes no-df\n$RULES"
 		RULES="$RULES\npass in proto { tcp, udp } from any port { 111, 2049 } to any"
-		RULES="$RULES\npass out proto { tcp, udp } from any to any port { 111, 2049 }"
+		RULES="$RULES\npass out proto { tcp, udp } from any to any port { 111, 2049 } !received-on any"
 		;;
 	esac
 	echo $RULES | pfctl -f -
@@ -391,8 +390,8 @@ dmesg >/var/run/dmesg.boot
 make_keys
 
 echo -n 'starting early daemons:'
-start_daemon syslogd ldattach pflogd named nsd ntpd isakmpd iked sasyncd
-start_daemon ldapd npppd
+start_daemon syslogd ldattach pflogd named nsd unbound ntpd
+start_daemon isakmpd iked sasyncd ldapd npppd
 echo '.'
 
 if [ X"${ipsec}" != X"NO" ]; then
@@ -498,10 +497,9 @@ if ifconfig lo0 inet6 >/dev/null 2>&1; then
 	fi
 fi
 
-start_daemon hostapd rwhod lpd sendmail smtpd httpd slowcgi nginx ftpd
+start_daemon hostapd lpd sendmail smtpd slowcgi nginx ftpd
 start_daemon ftpproxy tftpd tftpproxy identd inetd rarpd bootparamd
-start_daemon rbootd mopd spamd spamlogd kdc kadmind kpasswdd
-start_daemon ipropd_master ipropd_slave sndiod
+start_daemon rbootd mopd spamd spamlogd sndiod
 echo '.'
 
 # If rc.firstime exists, run it just once, and make sure it is deleted

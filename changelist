@@ -1,4 +1,4 @@
-#	$OpenBSD: changelist,v 1.81 2013/11/26 20:12:03 sthen Exp $
+#	$OpenBSD: changelist,v 1.87 2014/04/29 21:30:20 dcoppa Exp $
 #
 # List of files which the security script backs up and checks
 # for modifications.
@@ -39,9 +39,6 @@
 /etc/hostapd.conf
 +/etc/hostname.*
 /etc/hosts
-/etc/hosts.allow
-/etc/hosts.deny
-/etc/hosts.equiv
 /etc/hosts.lpd
 /etc/ifstated.conf
 +/etc/iked.conf
@@ -51,7 +48,6 @@
 +/etc/isakmpd/isakmpd.policy
 /etc/isakmpd/local.pub
 +/etc/isakmpd/private/local.key
-/etc/kerberosV/krb5.conf
 /etc/ksh.kshrc
 /etc/ldapd.conf
 /etc/ldpd.conf
@@ -129,7 +125,6 @@
 /etc/sensorsd.conf
 /etc/services
 /etc/shells
-/etc/shosts.equiv
 /etc/slip.hosts
 /etc/slip.login
 /etc/snmpd.conf
@@ -158,7 +153,6 @@
 /etc/ypldap.conf
 /root/.Xdefaults
 /root/.cshrc
-/root/.klogin
 /root/.login
 /root/.profile
 /root/.rhosts
@@ -170,7 +164,6 @@
 /var/cron/cron.allow
 /var/cron/cron.deny
 /var/cron/tabs/root
-+/var/kerberosV/m-key
 /var/named/etc/named.conf
 +/var/named/etc/rndc.key
 /var/named/etc/root.hint
@@ -178,9 +171,7 @@
 /var/named/standard/loopback
 /var/named/standard/loopback6.arpa
 /var/nsd/etc/nsd.conf
-/var/www/conf/access.conf
-/var/www/conf/httpd.conf
-/var/www/conf/mime.types
-/var/www/conf/srm.conf
+/var/unbound/etc/root.key
+/var/unbound/etc/unbound.conf
 /var/yp/Makefile.main
 /var/yp/Makefile.yp
