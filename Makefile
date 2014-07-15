@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.357 2014/04/29 21:30:20 dcoppa Exp $
+#	$OpenBSD: Makefile,v 1.376 2014/07/15 10:09:36 deraadt Exp $
 
 TZDIR=		/usr/share/zoneinfo
 LOCALTIME=	Canada/Mountain
@@ -30,19 +30,24 @@ kernels: bootblocks ${ALL_KERNELS}
 # -rw-r--r--
 BINOWN= root
 BINGRP= wheel
-BIN1=	changelist csh.cshrc csh.login csh.logout daily dhcpd.conf \
-	exports ftpusers ftpchroot gettytab group hosts hosts.lpd inetd.conf \
-	ksh.kshrc locate.rc man.conf monthly motd mrouted.conf myname \
-	netstart networks newsyslog.conf printcap protocols \
-	rbootd.conf rc rc.conf rc.local rc.securelevel rc.shutdown \
-	remote rpc services shells syslog.conf weekly \
-	etc.${MACHINE}/login.conf \
-	etc.${MACHINE}/disktab dhclient.conf mailer.conf ntpd.conf \
-	moduli pf.os sensorsd.conf ifstated.conf mixerctl.conf
-
+BIN1=	changelist csh.cshrc csh.login csh.logout daily dhclient.conf \
+	etc.${MACHINE}/disktab etc.${MACHINE}/login.conf \
+	ftpusers gettytab group hosts ksh.kshrc locate.rc \
+	mailer.conf man.conf mixerctl.conf moduli monthly motd \
+	myname netstart networks newsyslog.conf pf.os protocols \
+	rc rc.conf rpc services shells syslog.conf weekly
 .if ${MACHINE} != "aviion" 
 BIN1+=	wsconsctl.conf
 .endif
+
+EXAMPLES=chio.conf dhcpd.conf exports ftpchroot hosts.lpd ifstated.conf \
+	inetd.conf mrouted.conf ntpd.conf printcap rbootd.conf remote \
+	sensorsd.conf
+
+EXAMPLES_600=bgpd.conf dvmrpd.conf hostapd.conf iked.conf ipsec.conf \
+	ldapd.conf ldpd.conf ospf6d.conf ospfd.conf rc.local \
+	rc.securelevel rc.shutdown relayd.conf ripd.conf \
+	sasyncd.conf snmpd.conf ypldap.conf 
 
 # -rw-rw-r--
 BIN2=	motd
@@ -55,7 +60,7 @@ RCDAEMONS=	amd apmd bgpd bootparamd cron dhcpd dhcrelay dvmrpd \
 		relayd ripd route6d rtadvd rtsold sasyncd sendmail \
 		sensorsd slowcgi smtpd snmpd spamd sshd syslogd watchdogd \
 		wsmoused xdm ypbind ypldap yppasswdd ypserv nfsd mountd lockd \
-		statd spamlogd sndiod tftpd tftpproxy ldomd unbound
+		statd spamlogd sndiod tftpd tftpproxy ldomd unbound iscsid
 
 MISETS=	base${OSrev}.tgz comp${OSrev}.tgz \
 	man${OSrev}.tgz game${OSrev}.tgz etc${OSrev}.tgz
@@ -80,8 +85,6 @@ install-mtree:
 	    ${DESTDIR}${MTREEDIR}
 	${INSTALL} -c -o root -g wheel -m 444 mtree/4.4BSD.dist \
 	    ${DESTDIR}${MTREEDIR}
-	${INSTALL} -c -o root -g wheel -m 444 mtree/BSD.local.dist \
-	    ${DESTDIR}${MTREEDIR}
 	${INSTALL} -c -o root -g wheel -m 444 mtree/BSD.x11.dist \
 	    ${DESTDIR}${MTREEDIR}
 
@@ -96,10 +99,11 @@ distribution-etc-root-var: distrib-dirs
 	    chown ${BINOWN} ${DESTDIR}/etc/ttys && \
 	    chgrp ${BINGRP} ${DESTDIR}/etc/ttys && \
 	    chmod 644 ${DESTDIR}/etc/ttys
-	cat sysctl.conf etc.${MACHINE}/sysctl.conf > ${DESTDIR}/etc/sysctl.conf && \
-	    chown ${BINOWN} ${DESTDIR}/etc/sysctl.conf && \
-	    chgrp ${BINGRP} ${DESTDIR}/etc/sysctl.conf && \
-	    chmod 644 ${DESTDIR}/etc/sysctl.conf
+	cat examples/sysctl.conf etc.${MACHINE}/sysctl.conf > \
+	    ${DESTDIR}/etc/examples/sysctl.conf && \
+	    chown ${BINOWN} ${DESTDIR}/etc/examples/sysctl.conf && \
+	    chgrp ${BINGRP} ${DESTDIR}/etc/examples/sysctl.conf && \
+	    chmod 644 ${DESTDIR}/etc/examples/sysctl.conf
 	cat fbtab.head etc.${MACHINE}/fbtab fbtab.tail > ${DESTDIR}/etc/fbtab && \
 	    chown ${BINOWN} ${DESTDIR}/etc/fbtab && \
 	    chgrp ${BINGRP} ${DESTDIR}/etc/fbtab && \
@@ -108,22 +112,7 @@ distribution-etc-root-var: distrib-dirs
 	${INSTALL} -c -o root -g crontab -m 600 crontab ${DESTDIR}/var/cron/tabs/root
 	${INSTALL} -c -o root -g wheel -m 600 master.passwd ${DESTDIR}/etc
 	pwd_mkdb -p -d ${DESTDIR}/etc /etc/master.passwd
-	${INSTALL} -c -o root -g wheel -m 600 bgpd.conf ${DESTDIR}/etc
-	${INSTALL} -c -o root -g wheel -m 600 ospfd.conf ${DESTDIR}/etc
-	${INSTALL} -c -o root -g wheel -m 600 ospf6d.conf ${DESTDIR}/etc
-	${INSTALL} -c -o root -g wheel -m 600 ripd.conf ${DESTDIR}/etc
-	${INSTALL} -c -o root -g wheel -m 600 dvmrpd.conf ${DESTDIR}/etc
-	${INSTALL} -c -o root -g wheel -m 600 ldpd.conf ${DESTDIR}/etc
 	${INSTALL} -c -o root -g wheel -m 600 pf.conf ${DESTDIR}/etc
-	${INSTALL} -c -o root -g operator -m 644 chio.conf ${DESTDIR}/etc
-	${INSTALL} -c -o root -g wheel -m 600 hostapd.conf ${DESTDIR}/etc
-	${INSTALL} -c -o root -g wheel -m 600 relayd.conf ${DESTDIR}/etc
-	${INSTALL} -c -o root -g wheel -m 600 iked.conf ${DESTDIR}/etc
-	${INSTALL} -c -o root -g wheel -m 600 ipsec.conf ${DESTDIR}/etc
-	${INSTALL} -c -o root -g wheel -m 600 sasyncd.conf ${DESTDIR}/etc
-	${INSTALL} -c -o root -g wheel -m 600 snmpd.conf ${DESTDIR}/etc
-	${INSTALL} -c -o root -g wheel -m 600 ldapd.conf ${DESTDIR}/etc
-	${INSTALL} -c -o root -g wheel -m 600 ypldap.conf ${DESTDIR}/etc
 	${INSTALL} -c -o root -g _nsd -m 640 nsd.conf ${DESTDIR}/var/nsd/etc
 	${INSTALL} -c -o root -g wheel -m 644 unbound.conf ${DESTDIR}/var/unbound/etc
 	${INSTALL} -c -o ${BINOWN} -g ${BINGRP} -m 555 \
@@ -173,6 +162,11 @@ distribution-etc-root-var: distrib-dirs
 		    ${DESTDIR}/etc/ppp; \
 		${INSTALL} -c -o root -g wheel -m 600 pap-secrets \
 		    ${DESTDIR}/etc/ppp
+	cd examples; \
+		${INSTALL} -c -o root -g wheel -m 644 ${EXAMPLES} \
+		    ${DESTDIR}/etc/examples; \
+		${INSTALL} -c -o root -g wheel -m 600 ${EXAMPLES_600} \
+		    ${DESTDIR}/etc/examples
 	cd signify; \
 		${INSTALL} -c -o root -g wheel -m 644 *.pub \
 		    ${DESTDIR}/etc/signify
@@ -234,8 +228,6 @@ distribution-etc-root-var: distrib-dirs
 	    ${DESTDIR}/var/log/wtmp
 	${INSTALL} -c -o ${BINOWN} -g wheel -m 640 /dev/null \
 	    ${DESTDIR}/var/log/xferlog
-	${INSTALL} -c -o ${BINOWN} -g utmp -m 664 /dev/null \
-	    ${DESTDIR}/var/run/utmp
 	cd ../gnu/usr.sbin/sendmail/cf/cf && exec ${MAKE} distribution
 	cd ../usr.sbin/ypserv/ypinit && exec ${MAKE} distribution
 	cd ../usr.bin/ssh && exec ${MAKE} distribution
@@ -260,12 +252,18 @@ distribution-etc-root-var: distrib-dirs
 distribution:
 	exec ${SUDO} ${MAKE} distribution-etc-root-var
 	cd .. && exec ${SUDO} ${MAKE} install
-	touch ${DESTDIR}/var/db/sysmerge/etcsum
-	TMPSUM=`mktemp /tmp/_etcsum.XXXXXXXXXX` || exit 1; \
-	sort ../distrib/sets/lists/etc/{mi,md.${MACHINE}} > $${TMPSUM}; \
+	touch ${DESTDIR}/usr/share/sysmerge/etcsum
+	touch ${DESTDIR}/usr/share/sysmerge/examplessum
+	ETCLIST=`mktemp /tmp/_etclist.XXXXXXXXXX` || exit 1; \
+	sort ../distrib/sets/lists/etc/{mi,md.${MACHINE}} > $${ETCLIST}; \
 	cd ${DESTDIR} && \
-		xargs cksum < $${TMPSUM} > ${DESTDIR}/var/db/sysmerge/etcsum; \
-	rm -f $${TMPSUM}
+		xargs sha256 -h ${DESTDIR}/usr/share/sysmerge/etcsum < $${ETCLIST} || true; \
+	rm -f $${ETCLIST}
+	EGLIST=`mktemp /tmp/_eglist.XXXXXXXXXX` || exit 1; \
+	grep -h '/etc/examples/' ../distrib/sets/lists/base/{mi,md.${MACHINE}} | sort > $${EGLIST}; \
+	cd ${DESTDIR} && \
+		xargs sha256 -h ${DESTDIR}/usr/share/sysmerge/examplessum < $${EGLIST} || true; \
+	rm -f $${EGLIST}
 
 distrib-dirs:
 	if [ ! -d ${DESTDIR}/. ]; then \

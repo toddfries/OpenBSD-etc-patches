@@ -1,4 +1,4 @@
-#	$OpenBSD: rc,v 1.427 2014/04/25 17:59:53 bluhm Exp $
+#	$OpenBSD: rc,v 1.434 2014/07/14 10:10:44 ajacoutot Exp $
 
 # System startup script run by init on autoboot
 # or after single-user.
@@ -205,71 +205,11 @@ setup_X_sockets()
 	fi
 }
 
-# End subroutines
+do_fsck()
+{
+	local _flags=$1
 
-stty status '^T'
-
-# Set shell to ignore SIGINT (2), but not children;
-# shell catches SIGQUIT (3) and returns to single user after fsck.
-trap : 2
-trap : 3	# shouldn't be needed
-
-HOME=/; export HOME
-INRC=1; export INRC
-PATH=/sbin:/bin:/usr/sbin:/usr/bin
-export PATH
-
-# must set the domainname before rc.conf, so YP startup choices can be made
-if [ -f /etc/defaultdomain ]; then
-	domainname `stripcom /etc/defaultdomain`
-fi
-
-# pick up option configuration
-. /etc/rc.conf
-
-if [ X"$1" = X"shutdown" ]; then
-	random_seed
-
-	# If we are in secure level 0, assume single user mode.
-	if [ `sysctl -n kern.securelevel` -ne 0 ]; then
-		pkg_scripts=${pkg_scripts%%*( )}
-		if [ -n "${pkg_scripts}" ]; then
-			echo -n 'stopping package daemons:'
-			while [ -n "${pkg_scripts}" ]; do
-				_r=${pkg_scripts##* }
-				pkg_scripts=${pkg_scripts%%*( )${_r}}
-				[ -x /etc/rc.d/${_r} ] && /etc/rc.d/${_r} stop
-			done
-			echo '.'
-		fi
-
-		echo /etc/rc.shutdown in progress...
-		. /etc/rc.shutdown
-		echo /etc/rc.shutdown complete.
-	else
-		echo single user: not running shutdown scripts
-	fi
-
-	# bring carp interfaces down gracefully
-	ifconfig | while read a b; do
-		case $a in
-		carp+([0-9]):) ifconfig ${a%:} down ;;
-		esac
-	done
-
-	if [ X"${powerdown}" = X"YES" ]; then
-		exit 2
-	fi
-	exit 0
-fi
-
-swapctl -A -t blk
-
-if [ -e /fastboot ]; then
-	echo "Fast boot: skipping disk checks."
-elif [ X"$1" = X"autoboot" ]; then
-	echo "Automatic boot in progress: starting file system checks."
-	fsck -p
+	fsck -p $_flags
 	case $? in
 	0)
 		;;
@@ -299,6 +239,71 @@ elif [ X"$1" = X"autoboot" ]; then
 		exit 1
 		;;
 	esac
+}
+
+# End subroutines
+
+stty status '^T'
+
+# Set shell to ignore SIGINT (2), but not children;
+# shell catches SIGQUIT (3) and returns to single user after fsck.
+trap : 2
+trap : 3	# shouldn't be needed
+
+HOME=/; export HOME
+INRC=1; export INRC
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+export PATH
+
+# must set the domainname before rc.conf, so YP startup choices can be made
+if [ -f /etc/defaultdomain ]; then
+	domainname `stripcom /etc/defaultdomain`
+fi
+
+# need to get local functions from rc.subr
+FUNCS_ONLY=1 . /etc/rc.d/rc.subr
+
+# load rc.conf into scope 
+_rc_parse_conf
+
+if [ X"$1" = X"shutdown" ]; then
+	random_seed
+
+	# If we are in secure level 0, assume single user mode.
+	if [ `sysctl -n kern.securelevel` -ne 0 ]; then
+		pkg_scripts=${pkg_scripts%%*( )}
+		if [ -n "${pkg_scripts}" ]; then
+			echo -n 'stopping package daemons:'
+			while [ -n "${pkg_scripts}" ]; do
+				_r=${pkg_scripts##* }
+				pkg_scripts=${pkg_scripts%%*( )${_r}}
+				[ -x /etc/rc.d/${_r} ] && /etc/rc.d/${_r} stop
+			done
+			echo '.'
+		fi
+
+		[ -f /etc/rc.shutdown ] && sh /etc/rc.shutdown
+	else
+		echo single user: not running shutdown scripts
+	fi
+
+	# bring carp interfaces down gracefully
+	ifconfig | while read a b; do
+		case $a in
+		carp+([0-9]):) ifconfig ${a%:} down ;;
+		esac
+	done
+
+	exit 0
+fi
+
+swapctl -A -t blk
+
+if [ -e /fastboot ]; then
+	echo "Fast boot: skipping disk checks."
+elif [ X"$1" = X"autoboot" ]; then
+	echo "Automatic boot in progress: starting file system checks."
+	do_fsck
 fi
 
 trap "echo 'Boot interrupted.'; exit 1" 3
@@ -391,7 +396,7 @@ make_keys
 
 echo -n 'starting early daemons:'
 start_daemon syslogd ldattach pflogd named nsd unbound ntpd
-start_daemon isakmpd iked sasyncd ldapd npppd
+start_daemon iscsid isakmpd iked sasyncd ldapd npppd
 echo '.'
 
 if [ X"${ipsec}" != X"NO" ]; then
@@ -410,6 +415,10 @@ echo '.'
 
 mount -a
 swapctl -A -t noblk
+
+# check and mount networked filesystems
+do_fsck -N
+mount -a -N
 
 # /var/crash should be a directory or a symbolic link
 # to the crash directory if core dumps are to be saved.
@@ -446,10 +455,10 @@ echo clearing /tmp
 
 setup_X_sockets
 
-[ -f /etc/rc.securelevel ] && . /etc/rc.securelevel
-if [ X"${securelevel}" != X"" ]; then
-	echo -n 'setting kernel security level: '
-	sysctl kern.securelevel=${securelevel}
+[ -f /etc/rc.securelevel ] && sh /etc/rc.securelevel
+# rc.securelevel did not specifically set -1 or 2, so select the default: 1
+if [ `sysctl -n kern.securelevel` -eq 0 ]; then
+	sysctl kern.securelevel=1
 fi
 
 # patch /etc/motd
@@ -523,7 +532,7 @@ if [ -n "${pkg_scripts}" ]; then
 	echo '.'
 fi
 
-[ -f /etc/rc.local ] && . /etc/rc.local
+[ -f /etc/rc.local ] && sh /etc/rc.local
 
 ifconfig -g carp -carpdemote 128	# disable carp interlock
 

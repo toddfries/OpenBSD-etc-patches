@@ -1,4 +1,4 @@
-#	$OpenBSD: special,v 1.104 2014/04/29 21:30:20 dcoppa Exp $
+#	$OpenBSD: special,v 1.106 2014/06/10 17:19:25 millert Exp $
 #	$NetBSD: special,v 1.4 1996/05/08 21:30:18 pk Exp $
 #	@(#)special	8.2 (Berkeley) 1/23/94
 #
@@ -98,6 +98,8 @@ ssh_host_dsa_key	type=file mode=0600 uname=root gname=wheel optional
 ssh_host_dsa_key.pub	type=file mode=0644 uname=root gname=wheel optional
 ssh_host_ecdsa_key	type=file mode=0600 uname=root gname=wheel optional
 ssh_host_ecdsa_key.pub	type=file mode=0644 uname=root gname=wheel optional
+ssh_host_ed25519_key	type=file mode=0600 uname=root gname=wheel optional
+ssh_host_ed25519_key.pub	type=file mode=0644 uname=root gname=wheel optional
 ssh_host_key	type=file mode=0600 uname=root gname=wheel optional
 ssh_host_key.pub	type=file mode=0644 uname=root gname=wheel optional
 ssh_host_rsa_key	type=file mode=0600 uname=root gname=wheel optional
@@ -151,8 +153,6 @@ sbin		type=dir mode=0755 uname=root gname=wheel ignore
 ..	#usr/sbin
 share		type=dir mode=0755 uname=root gname=wheel ignore
 ..	#usr/share
-src		type=dir mode=0775 uname=root gname=wsrc ignore optional
-..	#usr/src
 ..	#usr
 
 var		type=dir mode=0755 uname=root gname=wheel
