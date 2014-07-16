@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.376 2014/07/15 10:09:36 deraadt Exp $
+#	$OpenBSD: Makefile,v 1.384 2014/07/16 19:08:54 deraadt Exp $
 
 TZDIR=		/usr/share/zoneinfo
 LOCALTIME=	Canada/Mountain
@@ -30,27 +30,25 @@ kernels: bootblocks ${ALL_KERNELS}
 # -rw-r--r--
 BINOWN= root
 BINGRP= wheel
-BIN1=	changelist csh.cshrc csh.login csh.logout daily dhclient.conf \
-	etc.${MACHINE}/disktab etc.${MACHINE}/login.conf \
-	ftpusers gettytab group hosts ksh.kshrc locate.rc \
-	mailer.conf man.conf mixerctl.conf moduli monthly motd \
-	myname netstart networks newsyslog.conf pf.os protocols \
-	rc rc.conf rpc services shells syslog.conf weekly
+MUTABLE=changelist csh.cshrc csh.login csh.logout daily dhclient.conf \
+	etc.${MACHINE}/disktab etc.${MACHINE}/login.conf ftpusers \
+	gettytab group hosts ksh.kshrc locate.rc mailer.conf man.conf \
+	moduli monthly myname netstart networks newsyslog.conf \
+	pf.os protocols rc rc.conf rpc services shells syslog.conf weekly
+
+# -rw-r--r--
+EXAMPLES=chio.conf dhcpd.conf exports ftpchroot hosts.lpd ifstated.conf \
+	inetd.conf mixerctl.conf mrouted.conf ntpd.conf printcap \
+	rbootd.conf remote sensorsd.conf
 .if ${MACHINE} != "aviion" 
-BIN1+=	wsconsctl.conf
+EXAMPLES+= wsconsctl.conf
 .endif
 
-EXAMPLES=chio.conf dhcpd.conf exports ftpchroot hosts.lpd ifstated.conf \
-	inetd.conf mrouted.conf ntpd.conf printcap rbootd.conf remote \
-	sensorsd.conf
-
+# -rw-------
 EXAMPLES_600=bgpd.conf dvmrpd.conf hostapd.conf iked.conf ipsec.conf \
-	ldapd.conf ldpd.conf ospf6d.conf ospfd.conf rc.local \
+	ldapd.conf ldpd.conf ospf6d.conf ospfd.conf pf.conf rc.local \
 	rc.securelevel rc.shutdown relayd.conf ripd.conf \
 	sasyncd.conf snmpd.conf ypldap.conf 
-
-# -rw-rw-r--
-BIN2=	motd
 
 # -r-xr-xr-x
 RCDAEMONS=	amd apmd bgpd bootparamd cron dhcpd dhcrelay dvmrpd \
@@ -64,19 +62,6 @@ RCDAEMONS=	amd apmd bgpd bootparamd cron dhcpd dhcrelay dvmrpd \
 
 MISETS=	base${OSrev}.tgz comp${OSrev}.tgz \
 	man${OSrev}.tgz game${OSrev}.tgz etc${OSrev}.tgz
-
-# Use NOGZIP on architectures where the gzip'ing would take too much time
-# (pmax or slower :-)).  This way you get only tar'ed snap files and you can
-# gzip them on a faster machine
-.ifndef NOGZIP
-GZIPCMD?=	gzip
-GZIPFLAGS?=	-9
-GZIPEXT?=	.gz
-.else
-GZIPCMD=	cat
-GZIPFLAGS=
-GZIPEXT=
-.endif
 
 all clean cleandir depend etc install lint:
 
@@ -94,8 +79,8 @@ distribution-etc-root-var distribution distrib-dirs release:
 	@false
 .else
 distribution-etc-root-var: distrib-dirs
-	${INSTALL} -c -o ${BINOWN} -g ${BINGRP} -m 644 ${BIN1} ${DESTDIR}/etc
-	ksh ttys.pty | cat etc.${MACHINE}/ttys - > ${DESTDIR}/etc/ttys && \
+	${INSTALL} -c -o ${BINOWN} -g ${BINGRP} -m 644 ${MUTABLE} ${DESTDIR}/etc
+	sh ttys.pty | cat etc.${MACHINE}/ttys - > ${DESTDIR}/etc/ttys && \
 	    chown ${BINOWN} ${DESTDIR}/etc/ttys && \
 	    chgrp ${BINGRP} ${DESTDIR}/etc/ttys && \
 	    chmod 644 ${DESTDIR}/etc/ttys
@@ -108,7 +93,7 @@ distribution-etc-root-var: distrib-dirs
 	    chown ${BINOWN} ${DESTDIR}/etc/fbtab && \
 	    chgrp ${BINGRP} ${DESTDIR}/etc/fbtab && \
 	    chmod 644 ${DESTDIR}/etc/fbtab
-	${INSTALL} -c -o ${BINOWN} -g ${BINGRP} -m 664 ${BIN2} ${DESTDIR}/etc
+	${INSTALL} -c -o ${BINOWN} -g operator -m 664 motd ${DESTDIR}/etc
 	${INSTALL} -c -o root -g crontab -m 600 crontab ${DESTDIR}/var/cron/tabs/root
 	${INSTALL} -c -o root -g wheel -m 600 master.passwd ${DESTDIR}/etc
 	pwd_mkdb -p -d ${DESTDIR}/etc /etc/master.passwd
@@ -188,10 +173,8 @@ distribution-etc-root-var: distrib-dirs
 		    ${DESTDIR}/var/named/standard/loopback; \
 		${INSTALL} -c -o root -g wheel -m 644 db.loopback6.arpa \
 		    ${DESTDIR}/var/named/standard/loopback6.arpa
-	/bin/rm -f ${DESTDIR}/etc/localtime
-	ln -s ${TZDIR}/${LOCALTIME} ${DESTDIR}/etc/localtime
-	/bin/rm -f ${DESTDIR}/etc/rmt
-	ln -s /usr/sbin/rmt ${DESTDIR}/etc/rmt
+	ln -fs ${TZDIR}/${LOCALTIME} ${DESTDIR}/etc/localtime
+	ln -fs /usr/sbin/rmt ${DESTDIR}/etc/rmt
 	${INSTALL} -c -o root -g wheel -m 644 minfree \
 	    ${DESTDIR}/var/crash
 	${INSTALL} -c -o ${BINOWN} -g operator -m 664 /dev/null \
@@ -232,7 +215,6 @@ distribution-etc-root-var: distrib-dirs
 	cd ../usr.sbin/ypserv/ypinit && exec ${MAKE} distribution
 	cd ../usr.bin/ssh && exec ${MAKE} distribution
 	cd ../lib/libcrypto && exec ${MAKE} distribution
-	cd ../gnu/usr.bin/lynx && exec ${MAKE} -f Makefile.bsd-wrapper distribution
 	cd ../usr.bin/bgplg && exec ${MAKE} distribution
 	cd ../usr.bin/mail && exec ${MAKE} distribution
 	cd ../usr.sbin/ldapd && exec ${MAKE} distribution
@@ -273,7 +255,7 @@ distrib-dirs:
 	if [ ! -d ${DESTDIR}/usr/src ]; then \
 		${INSTALL} -d -o root -g wsrc -m 775 ${DESTDIR}/usr/src; \
 	fi
-	cd ${DESTDIR}/; rm -f sys; ln -s usr/src/sys sys
+	cd ${DESTDIR}/; ln -fhs usr/src/sys sys
 
 .ifndef RELEASEDIR
 release:
